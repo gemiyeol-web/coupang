@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>잘넷 쿠팡 로켓배송 납품자료 자동 변환기 v5.6</title>
+  <title>잘넷 쿠팡 로켓배송 납품자료 자동 변환기 v5.7</title>
   <!-- SheetJS (xlsx-js-style) for Excel processing -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -234,7 +234,40 @@
   .modal-card h4 {font-size:16px;margin-bottom:8px;color:var(--primary);}
   .modal-card p {font-size:13.5px;color:var(--text);margin-bottom:18px;white-space:pre-line;}
   .modal-actions {display:flex;justify-content:flex-end;gap:8px;}
-  </style>
+  
+  .date-summary-card {border-color:#cbd5e1;box-shadow:0 5px 18px rgba(15,23,42,.07);}
+  .date-summary-card .table-header {background:linear-gradient(135deg,#f8fbff,#eff6ff);align-items:flex-start;}
+  .date-summary-quickbar {display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:11px 18px 2px;background:#fff;}
+  .date-summary-quickbar strong {font-size:12px;color:#475569;margin-right:3px;}
+  .date-quick-btn {background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s ease;}
+  .date-quick-btn:hover {background:#e0f2fe;border-color:#7dd3fc;color:#075985;}
+  .date-quick-btn.active {background:#1f4e78;border-color:#1f4e78;color:#fff;box-shadow:0 2px 7px rgba(31,78,120,.2);}
+  .date-quickbar-hint {font-size:11.5px;color:#64748b;margin-left:auto;}
+  .date-summary-dashboard {display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:9px;padding:12px 18px;background:#fff;}
+  .date-summary-kpi {min-width:0;padding:11px 13px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;}
+  .date-summary-kpi-label {display:block;font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px;}
+  .date-summary-kpi-value {display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px;font-weight:800;color:#1e293b;font-variant-numeric:tabular-nums;}
+  .date-summary-kpi.sales {background:#eff6ff;border-color:#bfdbfe;}
+  .date-summary-kpi.sales .date-summary-kpi-value {color:#1d4ed8;}
+  .date-summary-kpi.profit {background:#f0fdf4;border-color:#bbf7d0;}
+  .date-summary-kpi.profit .date-summary-kpi-value {color:#15803d;}
+  .date-summary-kpi.period {background:#f5f3ff;border-color:#ddd6fe;}
+  .date-summary-kpi.period .date-summary-kpi-value {font-size:14px;color:#6d28d9;}
+  .date-summary-filter-bar {align-items:flex-start;gap:12px;border-top:1px solid #e2e8f0;}
+  .date-summary-filter-bar .filter-group {row-gap:8px;}
+  .date-summary-table-wrap {max-height:min(68vh,720px)!important;overscroll-behavior:contain;}
+  #tabDateSummaryTable {min-width:1120px;font-variant-numeric:tabular-nums;}
+  #tabDateSummaryTable th {position:sticky;top:0;z-index:4;background:#eaf0f6;box-shadow:0 1px 0 #cbd5e1;}
+  #tabDateSummaryTable th.num,#tabDateSummaryTable td.num {text-align:right;}
+  #tabDateSummaryTable td {padding:9px 11px;}
+  #tabDateSummaryTable tr.subtotal-day td:first-child {border-left:4px solid #0ea5e9;}
+  #tabDateSummaryTable tr.subtotal-month td:first-child {border-left:4px solid #3b82f6;}
+  #tabDateSummaryTable tr.subtotal-year td:first-child {border-left:4px solid #7c3aed;}
+  #tabDateSummaryTable tr.grand-total-row td:first-child {border-left:4px solid #fbbf24;}
+  #tabDateSummaryTable tr.subtotal-day td,#tabDateSummaryTable tr.subtotal-month td,#tabDateSummaryTable tr.subtotal-year td,#tabDateSummaryTable tr.grand-total-row td {padding-top:11px;padding-bottom:11px;}
+  @media(max-width:1050px){.date-summary-dashboard{grid-template-columns:repeat(3,minmax(120px,1fr));}}
+  @media(max-width:640px){.date-summary-dashboard{grid-template-columns:repeat(2,minmax(0,1fr));padding:10px;gap:7px;}.date-summary-kpi{padding:9px 10px;}.date-summary-kpi-value{font-size:15px;}.date-summary-quickbar{padding:10px;}.date-quickbar-hint{width:100%;margin:0;}.date-summary-filter-bar{padding:10px;}}
+</style>
 </head>
 <body>
   <div class="container">
@@ -243,7 +276,7 @@
         <h1>📦 잘넷 쿠팡 로켓배송 납품자료 자동 변환기</h1>
         <button type="button" class="v5-badge-btn" onclick="openVersionNotesModal()" title="클릭하여 업데이트 내역 확인">
           <span class="v5-badge-dot"></span>
-          <span>V5.6</span>
+          <span>V5.7</span>
         </button>
       </div>
       <div class="header-actions">
@@ -431,10 +464,10 @@
       </div>
     </div>
     <div id="dateSummaryTab" class="tab-content">
-      <div class="table-card">
+      <div class="table-card date-summary-card">
         <div class="table-header">
           <div>
-            <span>📅 연/월/일별 확정수량 · 납품자료 반영 수량 · 예상 매출합계(공급가/VAT포함) · 예상 수익 및 소계</span>
+            <span>📅 실적 및 기간별 소계</span>
             <div style="font-size:12px; color:var(--accent); font-weight:600; margin-top:3px;">
               💡 표에서 <b>[일 (납품일자)]</b>를 클릭하면 해당 일자의 납품자료가 <b>[⚡ 자동 변환기 실행]</b> 탭에 다시 표시됩니다.
             </div>
@@ -484,7 +517,16 @@
             <button class="btn-primary" style="width:100%; padding:7px 12px;" onclick="addManualDateRecord()">저장/반영</button>
           </div>
         </div>
-        <div class="filter-bar">
+        <div class="date-summary-quickbar" role="group" aria-label="빠른 실적 기간 선택">
+          <strong>빠른 기간</strong>
+          <button type="button" class="date-quick-btn" data-range="thisMonth" aria-pressed="false" onclick="setDateQuickRange('thisMonth')">이번 달</button>
+          <button type="button" class="date-quick-btn" data-range="lastMonth" aria-pressed="false" onclick="setDateQuickRange('lastMonth')">지난 달</button>
+          <button type="button" class="date-quick-btn" data-range="thisYear" aria-pressed="false" onclick="setDateQuickRange('thisYear')">올해</button>
+          <button type="button" class="date-quick-btn active" data-range="all" aria-pressed="true" onclick="setDateQuickRange('all')">전체</button>
+          <span class="date-quickbar-hint">아래 날짜·연도·월 필터와 함께 사용할 수 있습니다.</span>
+        </div>
+        <div class="date-summary-dashboard" id="dateSummaryDashboard" aria-live="polite"></div>
+        <div class="filter-bar date-summary-filter-bar">
           <div class="filter-group">
             <span><b>보기 모드:</b></span>
             <select id="tabGroupMode" onchange="renderAllDateTables()">
@@ -519,8 +561,8 @@
             <button class="btn-outline btn-sm" onclick="resetDateFilters()">필터 초기화</button>
           </div>
         </div>
-        <div class="table-wrap" style="max-height: 600px;">
-          <table id="tabDateSummaryTable">
+        <div class="table-wrap date-summary-table-wrap" style="max-height: 600px;">
+          <table id="tabDateSummaryTable" aria-label="일별·월별·연도별 납품 실적과 소계">
             <thead>
               <tr>
                 <th>연도</th>
@@ -736,13 +778,13 @@
   <div class="modal-backdrop" id="versionNotesModal" onclick="if(event.target===this) closeVersionNotesModal()">
     <div class="version-modal-card">
       <div class="version-modal-header">
-        <h3>✨ 잘넷 쿠팡 납품자료 자동 변환기 V5.6 업데이트 내역</h3>
+        <h3>✨ 잘넷 쿠팡 납품자료 자동 변환기 V5.7 업데이트 내역</h3>
         <button type="button" class="popup-close-hint" style="border:none; color:#fff;" onclick="closeVersionNotesModal()">닫기 ✕</button>
       </div>
       <div class="version-modal-body">
         <div class="update-note-item green">
-          <div class="u-title">📋 [V5.6 신규] 모든 품목 재고 상태와 무관하게 발주번호 100% 취합·표시 및 엑셀 다운로드 반영</div>
-          <div class="u-desc">1) 가용재고 고정(🔒), 재고관리 안함(🚫), 재고 부족/품절 또는 재고 미등록 상태와 <b>상관없이 모든 발주 품목의 발주번호가 누락 없이 100% 취합</b>되도록 개선했습니다.<br/>2) <b>물류센터별 품목 박스 내역 팝업</b>, <b>상품별 센터 납품수량 팝업</b>, <b>일자별 불러오기</b> 및 <b>모든 엑셀 다운로드</b>에서 모든 제품의 발주번호가 빠짐없이 기입됩니다.</div>
+          <div class="u-title">📊 [V5.7 개선] 실적 소계 대시보드·빠른 기간 선택·읽기 쉬운 소계 테이블</div>
+          <div class="u-desc">1) 실적 표 상단에 선택 기간의 운영 요약(일수·발주·수량·매출·수익)을 카드로 표시합니다.<br/>2) 이번 달·지난 달·올해·전체 기간을 한 번에 선택하고, 날짜 범위를 바로 좁힐 수 있습니다.<br/>3) 일·월·연 소계의 시각적 구분과 고정 헤더를 강화해 넓은 표에서도 합계를 쉽게 따라갈 수 있습니다.</div>
         </div>
         <div class="update-note-item green">
           <div class="u-title">💹 [V5.5 신규] 납품 리스트 탭 [개당 마진 · 마진율 (VAT별도)] 열 추가 및 부가세 통일 환산</div>
@@ -1188,7 +1230,7 @@
  }
  function buildCurrentStatePayload() {
  return {
-  version: "5.6",
+  version: "5.7",
   savedAt: Date.now(),
   referenceLastModifiedDate: referenceLastModifiedDate || formatLocalTodayYmd(),
   exportedAt: new Date().toISOString(),
@@ -1242,7 +1284,7 @@
  const a = document.createElement('a');
  const refDay = referenceLastModifiedDate || formatLocalTodayYmd();
  a.href = url;
- a.download = `잘넷_쿠팡납품변환기_v5.6_이어하기_${refDay}.html`;
+ a.download = `잘넷_쿠팡납품변환기_v5.7_이어하기_${refDay}.html`;
  document.body.appendChild(a);
  a.click();
  document.body.removeChild(a);
@@ -5940,6 +5982,38 @@
  document.getElementById('tabMonthFilter').value = 'ALL';
  document.getElementById('tabStartDate').value = '';
  document.getElementById('tabEndDate').value = '';
+ document.querySelectorAll('.date-quick-btn').forEach(btn => {
+  const active = btn.dataset.range === 'all';
+  btn.classList.toggle('active', active);
+  btn.setAttribute('aria-pressed', String(active));
+ });
+ renderAllDateTables();
+ }
+ function setDateQuickRange(range) {
+ const today = new Date();
+ const startInput = document.getElementById('tabStartDate');
+ const endInput = document.getElementById('tabEndDate');
+ document.getElementById('tabYearFilter').value = 'ALL';
+ document.getElementById('tabMonthFilter').value = 'ALL';
+ if (range === 'all') {
+  resetDateFilters();
+  return;
+ }
+ let start;
+ let end = today;
+ if (range === 'thisMonth') start = new Date(today.getFullYear(), today.getMonth(), 1);
+ else if (range === 'lastMonth') {
+  start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  end = new Date(today.getFullYear(), today.getMonth(), 0);
+ } else if (range === 'thisYear') start = new Date(today.getFullYear(), 0, 1);
+ else return;
+ startInput.value = formatLocalDateYmd(start);
+ endInput.value = formatLocalDateYmd(end);
+ document.querySelectorAll('.date-quick-btn').forEach(btn => {
+  const active = btn.dataset.range === range;
+  btn.classList.toggle('active', active);
+  btn.setAttribute('aria-pressed', String(active));
+ });
  renderAllDateTables();
  }
  function filterDateRecords(records) {
@@ -5960,6 +6034,33 @@
  }
  function renderAllDateTables() {
  renderDateSummaryTable('tabDateSummaryTable', dateLedgerRecords, true);
+ }
+ function renderDateSummaryDashboard(records, vatMode) {
+ const host = document.getElementById('dateSummaryDashboard');
+ if (!host) return;
+ const totals = createEmptyAccum();
+ const dateSet = new Set();
+ records.forEach(rec => {
+  addRecordToAccum(totals, rec);
+  dateSet.add(rec.date);
+ });
+ const dates = [...dateSet].sort();
+ const rangeLabel = dates.length ? (dates[0] === dates[dates.length - 1] ? dates[0] : dates[0] + ' ~ ' + dates[dates.length - 1]) : '선택 기간 데이터 없음';
+ const profit = vatMode === 'vat' ? totals.profitVat : totals.profit;
+ const profitLabel = vatMode === 'vat' ? '예상 수익 · VAT포함 기준' : '예상 수익 · VAT별도';
+ const revenue = vatMode === 'vat' ? totals.revenueVat : totals.revenue;
+ const revenueLabel = vatMode === 'vat' ? '예상 매출 · VAT포함' : '예상 매출 · VAT별도';
+ const cards = [
+  ['기간 / 납품일', rangeLabel, 'period'],
+  ['발주 건수', formatNum(totals.orderCount) + '건', ''],
+  ['확정 수량', formatNum(totals.confirmedQty) + '개', ''],
+  ['납품자료 반영', formatNum(totals.mappedQty) + '개', ''],
+  [revenueLabel, formatNum(revenue) + '원', 'sales'],
+  [profitLabel, formatNum(profit) + '원', 'profit']
+ ];
+ host.innerHTML = `
+  ${cards.map(([label, value, cls]) => `<div class="date-summary-kpi ${cls}"><span class="date-summary-kpi-label">${escapeHtml(label)}</span><strong class="date-summary-kpi-value" title="${escapeHtml(value)}">${escapeHtml(value)}</strong></div>`).join('')}
+ `;
  }
  function createEmptyAccum() {
  return {
@@ -6208,6 +6309,7 @@
   : '예상 수익 (VAT별도/수익률)';
  }
  const filtered = filterDateRecords(rawRecords);
+ renderDateSummaryDashboard(filtered, vatMode);
  const colSpan = showManageCol ? 10 : 9;
  if (filtered.length === 0) {
   tbody.innerHTML = `
