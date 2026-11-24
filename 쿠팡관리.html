@@ -5645,17 +5645,17 @@
     <td>
     <input type="text" class="popup-inline-note" placeholder="특이건 메모 입력..."
      value="${escapeHtml(curRemark)}"
-     onchange="updateCenterItemRemark('${jsSafeCenter}', '${jsSafeProd}', this.value)" />
+     onchange="updateCenterItemRemark(${jsSafeCenter}, ${jsSafeProd}, this.value)" />
     </td>
     <td class="num">
     <input type="number" class="popup-inline-input" min="0" value="${it.qty}"
      title="납품수량을 수정하면 전체 박스수·재고차감·매출이 즉시 재계산됩니다 (0 입력 시 삭제)"
-     onchange="updateCenterItemQtyFromPopup('${jsSafeCenter}', '${jsSafeProd}', '${jsSafeSku}', this.value)" />
+     onchange="updateCenterItemQtyFromPopup(${jsSafeCenter}, ${jsSafeProd}, ${jsSafeSku}, this.value)" />
     </td>
     <td class="num">
     <input type="number" class="popup-inline-input" style="width:62px;" min="1" value="${it.boxCap}"
      title="박스 입수량 수정"
-     onchange="updateCenterItemBoxCapFromPopup('${jsSafeCenter}', '${jsSafeProd}', '${jsSafeSku}', this.value)" />
+     onchange="updateCenterItemBoxCapFromPopup(${jsSafeCenter}, ${jsSafeProd}, ${jsSafeSku}, this.value)" />
     </td>
     <td class="num">${it.boxesExact.toFixed(1)}박스</td>
     <td class="num"><b style="color:var(--primary);">${formatNum(it.boxesCeil)}박스</b></td>
@@ -5665,7 +5665,7 @@
     </td>
     <td>
     <button type="button" class="btn-danger" style="padding:4px 8px; font-size:11.5px;"
-     onclick="deleteCenterItemFromPopup('${jsSafeCenter}', '${jsSafeProd}', '${jsSafeSku}')">삭제</button>
+     onclick="deleteCenterItemFromPopup(${jsSafeCenter}, ${jsSafeProd}, ${jsSafeSku})">삭제</button>
     </td>
    </tr>
    `;
@@ -5684,9 +5684,9 @@
     <b style="font-size:12px; color:#1e40af;">실출고 박스:</b>
     <input type="number" class="popup-inline-input" style="width:62px;" min="0" value="${stat.boxesCeilSum}"
      title="실출고 박스수량을 입력하면 밀크런/쉽먼트 판정이 즉시 변경됩니다"
-     onchange="applyCenterActualBoxOverride('${jsSafeCenter}', this.value, true)" />
+     onchange="applyCenterActualBoxOverride(${jsSafeCenter}, this.value, true)" />
     <span style="font-size:11.5px; color:var(--muted);">박스</span>
-    ${stat.hasManualBoxOverride ? `<button type="button" class="btn-reset-override" onclick="resetCenterActualBoxOverride('${jsSafeCenter}', event, true)" title="자동계산(${formatNum(stat.autoBoxesCeilSum)}박스)으로 복원">↺자동(${formatNum(stat.autoBoxesCeilSum)})</button>` : ''}
+    ${stat.hasManualBoxOverride ? `<button type="button" class="btn-reset-override" onclick="resetCenterActualBoxOverride(${jsSafeCenter}, event, true)" title="자동계산(${formatNum(stat.autoBoxesCeilSum)}박스)으로 복원">↺자동(${formatNum(stat.autoBoxesCeilSum)})</button>` : ''}
     </span>
    </div>
    </div>
@@ -5733,23 +5733,23 @@
    <td>
    <div class="ship-type-cell-wrap" id="shipDisplay_${domKey}">
     <span class="${shipInfo.badgeClass} clickable-ship-badge"
-     onclick="openCenterBoxOverrideInput('${jsSafeCenter}', event)"
+     onclick="openCenterBoxOverrideInput(${jsSafeCenter}, event)"
      title="클릭하여 실출고 박스수량 입력 (${escapeHtml(shipInfo.reason)})">${shipInfo.label}</span>
    </div>
    <div class="ship-inline-editor" id="shipEditor_${domKey}" onclick="event.stopPropagation()">
     <span style="font-size:11.5px; font-weight:800; color:var(--primary);">실출고:</span>
     <input type="number" id="shipBoxInput_${domKey}" class="ship-box-override-input" min="0" value="${stat.boxesCeilSum}"
      title="실출고 박스수량을 입력하면 10박스 이상은 밀크런, 9박스 이하는 쉽먼트(택배)로 자동 변경됩니다"
-     onkeydown="if(event.key==='Enter'){ event.preventDefault(); applyCenterActualBoxOverride('${jsSafeCenter}', this.value, false); } else if(event.key==='Escape'){ cancelCenterBoxOverrideInput('${jsSafeCenter}', event); }" />
+     onkeydown="if(event.key==='Enter'){ event.preventDefault(); applyCenterActualBoxOverride(${jsSafeCenter}, this.value, false); } else if(event.key==='Escape'){ cancelCenterBoxOverrideInput(${jsSafeCenter}, event); }" />
     <span style="font-size:11.5px; color:var(--muted); font-weight:700;">박스</span>
-    <button type="button" class="btn-primary btn-xs" onclick="applyCenterActualBoxOverride('${jsSafeCenter}', document.getElementById('shipBoxInput_${domKey}').value, false)">적용</button>
-    ${stat.hasManualBoxOverride ? `<button type="button" class="btn-outline btn-xs" onclick="resetCenterActualBoxOverride('${jsSafeCenter}', event, false)" title="자동계산(${formatNum(stat.autoBoxesCeilSum)}박스)으로 복원">자동(${formatNum(stat.autoBoxesCeilSum)})</button>` : ''}
-    <button type="button" class="btn-outline btn-xs" onclick="cancelCenterBoxOverrideInput('${jsSafeCenter}', event)">취소</button>
+    <button type="button" class="btn-primary btn-xs" onclick="applyCenterActualBoxOverride(${jsSafeCenter}, document.getElementById('shipBoxInput_${domKey}').value, false)">적용</button>
+    ${stat.hasManualBoxOverride ? `<button type="button" class="btn-outline btn-xs" onclick="resetCenterActualBoxOverride(${jsSafeCenter}, event, false)" title="자동계산(${formatNum(stat.autoBoxesCeilSum)}박스)으로 복원">자동(${formatNum(stat.autoBoxesCeilSum)})</button>` : ''}
+    <button type="button" class="btn-outline btn-xs" onclick="cancelCenterBoxOverrideInput(${jsSafeCenter}, event)">취소</button>
    </div>
    </td>
    <td class="num">${formatNum(stat.skuCount)}종</td>
    <td class="num"><b>${formatNum(stat.qtySum)}개</b></td>
-   <td class="num" style="cursor:pointer;" onclick="openCenterBoxOverrideInput('${jsSafeCenter}', event)" title="클릭하여 실출고 박스수량 직접 입력">
+   <td class="num" style="cursor:pointer;" onclick="openCenterBoxOverrideInput(${jsSafeCenter}, event)" title="클릭하여 실출고 박스수량 직접 입력">
    <b style="color:${stat.hasManualBoxOverride ? 'var(--accent)' : 'var(--primary)'}; font-size:14px; text-decoration:underline; text-underline-offset:3px;">${formatNum(stat.boxesCeilSum)}박스</b>
    ${stat.hasManualBoxOverride ? `<div style="font-size:11px; color:var(--muted);">자동 ${formatNum(stat.autoBoxesCeilSum)}박스</div>` : ''}
    </td>
@@ -6080,7 +6080,7 @@
    ${item.isBundle ? `<div style="margin-top:2px;"><span class="bundle-tag secondary">${compDetails.length}종 세트</span></div>` : ''}
   </td>
   <td class="sticky-prod-col">
-   <span class="clickable-prod-link" onclick="jumpToMasterProduct('${jsSafeSku}', '${jsSafeName}', ${item.boxQty || 1}, ${item.cost || 0}, ${item.price || 0})">${escapeHtml(item.name)}</span>
+   <span class="clickable-prod-link" onclick="jumpToMasterProduct(${jsSafeSku}, '${jsSafeName}', ${item.boxQty || 1}, ${item.cost || 0}, ${item.price || 0})">${escapeHtml(item.name)}</span>
    ${blockedProdPill}
   </td>
   <td class="hover-pop-cell"
@@ -6102,7 +6102,7 @@
    <input type="text" class="inline-input-remark" placeholder="비고 입력..."
    value="${escapeHtml(curProdRemark)}"
    title="비고를 입력하면 품목별 박스 내역 팝업의 비고 란과 즉시 연동됩니다"
-   onchange="updateProductRemarkFromList('${jsSafeName}', '${jsSafeSku}', this.value)" />
+   onchange="updateProductRemarkFromList('${jsSafeName}', ${jsSafeSku}, this.value)" />
   </td>
   `;
   prodTbody.appendChild(tr);
