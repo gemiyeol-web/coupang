@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>잘넷 쿠팡 로켓배송 납품자료 자동 변환기 v5.7</title>
+  <title>잘넷 쿠팡 로켓배송 납품자료 자동 변환기 v5.8</title>
   <!-- SheetJS (xlsx-js-style) for Excel processing -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -276,7 +276,7 @@
         <h1>📦 잘넷 쿠팡 로켓배송 납품자료 자동 변환기</h1>
         <button type="button" class="v5-badge-btn" onclick="openVersionNotesModal()" title="클릭하여 업데이트 내역 확인">
           <span class="v5-badge-dot"></span>
-          <span>V5.7</span>
+          <span>V5.8</span>
         </button>
       </div>
       <div class="header-actions">
@@ -778,10 +778,14 @@
   <div class="modal-backdrop" id="versionNotesModal" onclick="if(event.target===this) closeVersionNotesModal()">
     <div class="version-modal-card">
       <div class="version-modal-header">
-        <h3>✨ 잘넷 쿠팡 납품자료 자동 변환기 V5.7 업데이트 내역</h3>
+        <h3>✨ 잘넷 쿠팡 납품자료 자동 변환기 V5.8 업데이트 내역</h3>
         <button type="button" class="popup-close-hint" style="border:none; color:#fff;" onclick="closeVersionNotesModal()">닫기 ✕</button>
       </div>
       <div class="version-modal-body">
+        <div class="update-note-item green">
+          <div class="u-title">📦 [V5.8 개선] 납품 엑셀 가독성·세트 상품명 표시</div>
+          <div class="u-desc">1) 이번 발주 확정 수량이 없는 품목 행과 사용하지 않는 센터 열을 정리해 다운로드 파일을 간결하게 표시합니다.<br/>2) 머리글·품목 행·합계 행에 글꼴, 색상, 정렬, 테두리와 숫자 서식을 적용합니다.<br/>3) 세트 구성품 행은 유지하면서 상품명은 첫 구성 행에만 표시합니다.</div>
+        </div>
         <div class="update-note-item green">
           <div class="u-title">📊 [V5.7 개선] 실적 소계 대시보드·빠른 기간 선택·읽기 쉬운 소계 테이블</div>
           <div class="u-desc">1) 실적 표 상단에 선택 기간의 운영 요약(일수·발주·수량·매출·수익)을 카드로 표시합니다.<br/>2) 이번 달·지난 달·올해·전체 기간을 한 번에 선택하고, 날짜 범위를 바로 좁힐 수 있습니다.<br/>3) 일·월·연 소계의 시각적 구분과 고정 헤더를 강화해 넓은 표에서도 합계를 쉽게 따라갈 수 있습니다.</div>
@@ -864,7 +868,7 @@
       </div>
     </div>
   </div>
-  <script id="embeddedStateData" type="application/json">{"version":"5.6","savedAt":0,"masterItems":[],"inventoryItems":[],"dateLedgerRecords":[],"centerItemRemarks":{},"productRemarks":{},"currentSession":null}</script>
+  <script id="embeddedStateData" type="application/json">{"version":"5.8","savedAt":0,"masterItems":[],"inventoryItems":[],"dateLedgerRecords":[],"centerItemRemarks":{},"productRemarks":{},"currentSession":null}</script>
   <script>
  let masterItems = [];
  let inventoryItems = [];
@@ -1230,7 +1234,7 @@
  }
  function buildCurrentStatePayload() {
  return {
-  version: "5.7",
+  version: "5.8",
   savedAt: Date.now(),
   referenceLastModifiedDate: referenceLastModifiedDate || formatLocalTodayYmd(),
   exportedAt: new Date().toISOString(),
@@ -1284,7 +1288,7 @@
  const a = document.createElement('a');
  const refDay = referenceLastModifiedDate || formatLocalTodayYmd();
  a.href = url;
- a.download = `잘넷_쿠팡납품변환기_v5.7_이어하기_${refDay}.html`;
+ a.download = `잘넷_쿠팡납품변환기_v5.8_이어하기_${refDay}.html`;
  document.body.appendChild(a);
  a.click();
  document.body.removeChild(a);
@@ -1805,7 +1809,7 @@
   const { splitUnitPrice, splitSalesVat } = calcSplitComponentPriceAndSales(unitPrice, it.qty, compIdx, compCount);
   targetRows.push({
    '물류센터': cname, '출고구분': shipInfo.type, 'No': rowNo++, '발주번호': validPo,
-   'SKU ID': it.skuId || '-', '상품명': it.name, '품목코드': comp.itemCode, '품명': comp.internalName,
+   'SKU ID': it.skuId || '-', '상품명': compIdx === 0 ? it.name : '', '품목코드': comp.itemCode, '품명': comp.internalName,
    '납품수량(개)': it.qty, '실제 재고차감 수량(개)': deductQty, '납품가(VAT포함)': splitUnitPrice, '매출(VAT포함)': splitSalesVat,
    '박스입수량(개)': it.boxCap, '출고박스(올림)': it.boxesCeil, '비고(특이건 메모)': curRemark
   });
@@ -1823,6 +1827,7 @@
  appendCenterItemsExcelRows(centerName, stat, rows);
  const ws = XLSX.utils.json_to_sheet(rows);
  ws['!cols'] = CENTER_EXPORT_COLS;
+ formatCenterItemsWorksheet(ws, rows.length);
  const wb = XLSX.utils.book_new();
  const safeSheetName = String(`${centerName}_품목별박스`).replace(/[\\/?*\[\]:]/g, '').slice(0, 31) || '품목별박스내역';
  XLSX.utils.book_append_sheet(wb, ws, safeSheetName);
@@ -1840,6 +1845,7 @@
  centerNames.forEach(cname => appendCenterItemsExcelRows(cname, latestCenterTotals[cname], allRows));
  const ws = XLSX.utils.json_to_sheet(allRows);
  ws['!cols'] = CENTER_EXPORT_COLS;
+ formatCenterItemsWorksheet(ws, allRows.length);
  const wb = XLSX.utils.book_new();
  XLSX.utils.book_append_sheet(wb, ws, '전체센터_품목별출고박스');
  XLSX.writeFile(wb, `쿠팡_전체물류센터_품목별출고박스_${sheetNameInputVal}.xlsx`);
@@ -4300,7 +4306,7 @@
   ws[XLSX.utils.encode_cell({ r, c: 1 })] = { t: 'n', v: item.price || 0, z: '#,##0' };
   ws[XLSX.utils.encode_cell({ r, c: 2 })] = { t: 's', v: item.name };
  });
- const lastRow = Math.max(itemsToPlace.length + 6, 30);
+ const lastRow = Math.max(itemsToPlace.length + 5, 6);
  ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: lastRow, c: 36 } });
  const cols = [
   { wch: 14 },
@@ -4695,6 +4701,127 @@
  window.scrollTo({ top: 0, behavior: 'smooth' });
  showToast(`📂 [${rec.date}] 일자 납품자료를 자동 변환기 실행 탭에 불러왔습니다.`);
  }
+ function setWorksheetCellStyle(ws, r, c, style, numberFormat) {
+  const addr = XLSX.utils.encode_cell({ r, c });
+  const cell = ws[addr] || { t: 's', v: '' };
+  ws[addr] = { ...cell, s: style };
+  if (numberFormat) ws[addr].z = numberFormat;
+ }
+ function styleDeliveryWorksheet(ws, centerTotals, rowMode, maxProdRow, sumQtyRow, sumFinRow, sumVatRow, shipRow) {
+  const border = {
+   top: { style: 'thin', color: { rgb: 'D7DEE8' } },
+   bottom: { style: 'thin', color: { rgb: 'D7DEE8' } },
+   left: { style: 'thin', color: { rgb: 'E2E8F0' } },
+   right: { style: 'thin', color: { rgb: 'E2E8F0' } }
+  };
+  const headerStyle = {
+   fill: { patternType: 'solid', fgColor: { rgb: '1F4E78' } },
+   font: { name: '맑은 고딕', sz: 10, bold: true, color: { rgb: 'FFFFFF' } },
+   alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+   border
+  };
+  const bodyBase = {
+   font: { name: '맑은 고딕', sz: 10, color: { rgb: '1E293B' } },
+   alignment: { vertical: 'center' },
+   border
+  };
+  const qtyFormat = '#,##0;[Red]-#,##0;–';
+  const moneyFormat = '#,##0;[Red]-#,##0;–';
+  const cols = ws['!cols'] || [];
+  for (let c = 0; c <= 36; c++) {
+   if (!cols[c]) cols[c] = {};
+   if (c >= 3 && c <= 29 && rowMode === 'active') {
+    const active = Object.values(centerTotals || {}).some(st => st && st.col === c && Number(st.qtySum || 0) > 0);
+    cols[c].hidden = !active;
+    if (active && !cols[c].wch) cols[c].wch = 12;
+   }
+   if ((c === 0 || c === 1) && !cols[c].wch) cols[c].wch = 14;
+   if (c === 2 && !cols[c].wch) cols[c].wch = 38;
+   if (c >= 30 && !cols[c].wch) cols[c].wch = 16;
+  }
+  ws['!cols'] = cols;
+  ws['!rows'] = ws['!rows'] || [];
+  ws['!rows'][0] = { ...(ws['!rows'][0] || {}), hpt: 30 };
+  for (let c = 0; c <= 36; c++) setWorksheetCellStyle(ws, 0, c, headerStyle);
+  for (let r = 1; r <= maxProdRow; r++) {
+   const excelRow = r + 1;
+   const qtyCell = ws[`AE${excelRow}`];
+   const qty = Number(qtyCell && qtyCell.v || 0);
+   const hasOrder = Number.isFinite(qty) && qty > 0;
+   if (rowMode === 'active') {
+    ws['!rows'][r] = { ...(ws['!rows'][r] || {}), hidden: !hasOrder };
+   }
+   if (!hasOrder) continue;
+   ws['!rows'][r] = { ...(ws['!rows'][r] || {}), hpt: 22 };
+   const fill = r % 2 === 0 ? 'F8FAFC' : 'FFFFFF';
+   const rowStyle = { ...bodyBase, fill: { patternType: 'solid', fgColor: { rgb: fill } } };
+   for (let c = 0; c <= 36; c++) {
+    let fmt = null;
+    if (c === 0 || c === 1 || (c >= 32 && c <= 35)) fmt = moneyFormat;
+    else if ((c >= 3 && c <= 30) || c === 31) fmt = qtyFormat;
+    else if (c === 36) fmt = '0.0%';
+    setWorksheetCellStyle(ws, r, c, rowStyle, fmt);
+   }
+  }
+  const summaryStyles = [
+   [sumQtyRow - 1, 'DBEAFE', '1E3A8A'],
+   [sumFinRow - 1, 'DCFCE7', '166534'],
+   [sumVatRow - 1, 'BFDBFE', '1E3A8A'],
+   [shipRow - 1, 'FEF3C7', '92400E']
+  ];
+  summaryStyles.forEach(([r, fill, color]) => {
+   const style = {
+    fill: { patternType: 'solid', fgColor: { rgb: fill } },
+    font: { name: '맑은 고딕', sz: 10, bold: true, color: { rgb: color } },
+    alignment: { vertical: 'center' },
+    border
+   };
+   for (let c = 0; c <= 36; c++) {
+    const fmt = c === 36 ? '0.0%' : ((c >= 30 && c <= 35) ? moneyFormat : qtyFormat);
+    setWorksheetCellStyle(ws, r, c, style, fmt);
+   }
+   ws['!rows'][r] = { ...(ws['!rows'][r] || {}), hpt: 23 };
+  });
+  if (ws['!ref']) {
+   const range = XLSX.utils.decode_range(ws['!ref']);
+   range.e.r = Math.min(range.e.r, shipRow - 1);
+   range.e.c = Math.max(range.e.c, 36);
+   ws['!ref'] = XLSX.utils.encode_range(range);
+  }
+ }
+ function formatCenterItemsWorksheet(ws, rowCount) {
+  const border = {
+   top: { style: 'thin', color: { rgb: 'D7DEE8' } },
+   bottom: { style: 'thin', color: { rgb: 'D7DEE8' } },
+   left: { style: 'thin', color: { rgb: 'E2E8F0' } },
+   right: { style: 'thin', color: { rgb: 'E2E8F0' } }
+  };
+  const header = {
+   fill: { patternType: 'solid', fgColor: { rgb: '1F4E78' } },
+   font: { name: '맑은 고딕', sz: 10, bold: true, color: { rgb: 'FFFFFF' } },
+   alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+   border
+  };
+  for (let c = 0; c < 15; c++) setWorksheetCellStyle(ws, 0, c, header);
+  if (ws['!rows']) ws['!rows'][0] = { ...(ws['!rows'][0] || {}), hpt: 30 };
+  for (let r = 1; r <= rowCount; r++) {
+   const fill = r % 2 === 0 ? 'F8FAFC' : 'FFFFFF';
+   const style = {
+    fill: { patternType: 'solid', fgColor: { rgb: fill } },
+    font: { name: '맑은 고딕', sz: 10, color: { rgb: '1E293B' } },
+    alignment: { vertical: 'center', wrapText: true },
+    border
+   };
+   for (let c = 0; c < 15; c++) {
+    let fmt = null;
+    if (c === 2 || (c >= 8 && c <= 9) || (c >= 12 && c <= 13)) fmt = '#,##0';
+    if (c === 10 || c === 11) fmt = '#,##0"원"';
+    setWorksheetCellStyle(ws, r, c, style, fmt);
+   }
+   ws['!rows'] = ws['!rows'] || [];
+   ws['!rows'][r] = { ...(ws['!rows'][r] || {}), hpt: 22 };
+  }
+ }
  function processFiles(opts = {}) {
  if (!listWb && uploadedListRows.length === 0) return;
  let listRows = uploadedListRows;
@@ -5077,6 +5204,7 @@
  ws[`AJ${sumVatRow}`] = { t: 'n', f: `AG${sumVatRow}-AI${sumVatRow}`, v: totalProfitVat };
  ws[`AK${sumVatRow}`] = { t: 'n', f: `IFERROR(AJ${sumVatRow}/AG${sumVatRow},0)`, v: totalRevVat > 0 ? totalProfitVat / totalRevVat : 0 };
  ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: shipRow + 2, c: 36 } });
+ styleDeliveryWorksheet(ws, centerTotals, rowMode, maxProdRow, sumQtyRow, sumFinRow, sumVatRow, shipRow);
  currentRunDateRecords = computeDateRecordsFromRows(listRows, mappedProductNamesSet);
  if (!opts.skipLedgerUpsert && document.getElementById('chkAutoSaveDateLedger').checked) { upsertLedgerRecords(currentRunDateRecords); } else {
   renderAllDateTables();
