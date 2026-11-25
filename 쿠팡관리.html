@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>잘넷 쿠팡 로켓배송 납품자료 자동 변환기 v5.8.1</title>
+  <title>잘넷 쿠팡 로켓배송 납품자료 자동 변환기 v5.9</title>
   <!-- SheetJS (xlsx-js-style) for Excel processing -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -53,6 +53,14 @@
   .update-note-item .u-desc {font-size:12.5px;color:#475569;line-height:1.5;}
   .btn-popup-excel {background:#10b981;color:#ffffff;border:1px solid #059669;padding:5px 11px;border-radius:7px;font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px;box-shadow:0 2px 5px rgba(16, 185, 129, 0.25);transition:all 0.15s ease;}
   .btn-popup-excel:hover {background:#059669;transform:translateY(-1px);}
+  .logistics-form-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;padding:16px 18px;background:#fff;border-bottom:1px solid var(--border);}
+  .logistics-form-grid label {display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:4px;}
+  .logistics-form-grid input {width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px;}
+  .logistics-table-wrap {overflow:auto;max-height:65vh;}
+  #logisticsInfoTable {min-width:1500px;}
+  #logisticsInfoTable input {width:100%;min-width:100px;padding:6px 7px;border:1px solid #dce1e7;border-radius:5px;font:inherit;}
+  #logisticsInfoTable td:nth-child(6) input {min-width:240px;}
+  .logistics-help {padding:10px 18px;color:#64748b;font-size:12px;background:#f8fafc;}
   .nav-tabs {display:flex;gap:6px;margin-bottom:16px;border-bottom:2px solid var(--border);flex-wrap:wrap;}
   .tab-btn {background:#e2e8f0;color:var(--muted);border:none;padding:10px 20px;border-radius:9px 9px 0 0;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s ease;}
   .tab-btn.active {background:var(--primary);color:#fff;}
@@ -294,6 +302,7 @@
       <button class="tab-btn active" onclick="switchTab('converterTab', this)">⚡ 자동 변환기 실행</button>
       <button class="tab-btn" onclick="switchTab('dateSummaryTab', this)">📅 연/월/일별 실적 & 소계 (<span id="dateRecordCountBadge">0</span>일)</button>
       <button class="tab-btn" onclick="switchTab('masterTab', this)">🛠️ 납품 리스트 & 재고 통합 관리 (품목 <span id="masterCountBadge">0</span>종 · 재고 <span id="inventoryCountBadge">0</span>종)</button>
+      <button class="tab-btn" onclick="switchTab('logisticsInfoTab', this)">📍 쿠팡물류정보 (<span id="logisticsInfoCountBadge">0</span>곳)</button>
     </div>
     <div id="converterTab" class="tab-content active">
       <div class="upload-layout">
@@ -582,6 +591,16 @@
         </div>
       </div>
     </div>
+    <div id="logisticsInfoTab" class="tab-content">
+      <div class="table-card">
+        <div class="table-header"><div><b>📍 쿠팡물류정보</b><div style="font-size:12px;color:var(--muted);margin-top:3px;">물류센터별 배송지와 담당자 정보를 관리합니다.</div></div>
+          <div class="btn-group"><button class="btn-outline btn-sm" onclick="downloadLogisticsInfoTemplate()">📄 업로드 양식</button><button class="btn-success btn-sm" onclick="exportLogisticsInfoToExcel()">💾 현재 목록 엑셀</button><button class="btn-primary btn-sm" onclick="document.getElementById('logisticsInfoExcelInput').click()">📥 엑셀 전체 업로드</button><input type="file" id="logisticsInfoExcelInput" accept=".xlsx,.xls,.csv" onchange="handleLogisticsInfoExcelUpload(event)" /></div>
+        </div><div class="logistics-help">점포 값이 자동 변환기의 물류센터명과 같으면 출고박스 엑셀에 배송 정보가 연결됩니다. 엑셀 업로드는 현재 목록 전체를 교체합니다.</div>
+        <div class="logistics-form-grid">
+          <div><label>점포 *</label><input id="logisticsNewStore" placeholder="예: 인천36" /></div><div><label>점포명(고객명)</label><input id="logisticsNewCustomer" /></div><div><label>전화번호1</label><input id="logisticsNewPhone1" /></div><div><label>전화번호2</label><input id="logisticsNewPhone2" /></div><div><label>우편번호</label><input id="logisticsNewPostalCode" /></div><div><label>주소</label><input id="logisticsNewAddress" /></div><div><label>E-mail</label><input id="logisticsNewEmail" /></div><div><label>비고</label><input id="logisticsNewNote" /></div><div style="display:flex;align-items:end"><button class="btn-primary btn-sm" onclick="addLogisticsInfoRecord()">➕ 점포 추가</button></div>
+        </div><div class="logistics-table-wrap"><table id="logisticsInfoTable" onchange="handleLogisticsInfoTableChange(event)"><thead><tr><th>점포</th><th>점포명(고객명)</th><th>전화번호1</th><th>전화번호2</th><th>우편번호</th><th>주소</th><th>E-mail</th><th style="width:28px"></th><th>비고</th><th>관리</th></tr></thead><tbody id="logisticsInfoTableBody"></tbody></table></div>
+      </div>
+    </div>
     <div id="masterTab" class="tab-content">
       <div class="table-card">
         <div class="table-header">
@@ -778,10 +797,14 @@
   <div class="modal-backdrop" id="versionNotesModal" onclick="if(event.target===this) closeVersionNotesModal()">
     <div class="version-modal-card">
       <div class="version-modal-header">
-        <h3>✨ 잘넷 쿠팡 납품자료 자동 변환기 V5.8.1 업데이트 내역</h3>
+        <h3>✨ 잘넷 쿠팡 납품자료 자동 변환기 V5.9 업데이트 내역</h3>
         <button type="button" class="popup-close-hint" style="border:none; color:#fff;" onclick="closeVersionNotesModal()">닫기 ✕</button>
       </div>
       <div class="version-modal-body">
+        <div class="update-note-item green">
+          <div class="u-title">📍 [V5.9 신규] 쿠팡물류정보 관리 및 센터 출고 엑셀 연결</div>
+          <div class="u-desc">점포별 배송 정보 등록·수정과 엑셀 전체 업로드를 지원합니다. 전체 센터 출고박스 엑셀에는 배송지 정보와 해당 센터의 모든 발주번호가 각 품목 행에 표시됩니다.</div>
+        </div>
         <div class="update-note-item danger">
           <div class="u-title">🛡️ [V5.8.1 수정] 업로드 오류 처리·엑셀 서식 안정화</div>
           <div class="u-desc">1) 센터명과 세트 행의 동적 이벤트 인자를 안전하게 처리합니다.<br/>2) 손상된 파일과 읽기 실패를 화면에 알리고, 일괄 업로드는 모든 파일이 정상일 때만 저장합니다.<br/>3) 엑셀의 0 표시 서식에서 대시 문자를 올바르게 따옴표 처리합니다.</div>
@@ -872,10 +895,11 @@
       </div>
     </div>
   </div>
-  <script id="embeddedStateData" type="application/json">{"version":"5.8.1","savedAt":0,"masterItems":[],"inventoryItems":[],"dateLedgerRecords":[],"centerItemRemarks":{},"productRemarks":{},"currentSession":null}</script>
+  <script id="embeddedStateData" type="application/json">{"version":"5.9","savedAt":0,"masterItems":[],"inventoryItems":[],"dateLedgerRecords":[],"logisticsInfoRecords":[],"centerItemRemarks":{},"productRemarks":{},"currentSession":null}</script>
   <script>
  let masterItems = [];
  let inventoryItems = [];
+ let logisticsInfoRecords = [];
  let currentOrderDeductionByCode = {};
  let highlightedMasterSku = null;
    let lastDeductedSignature = null;
@@ -1238,13 +1262,14 @@
  }
  function buildCurrentStatePayload() {
  return {
-  version: "5.8.1",
+  version: "5.9",
   savedAt: Date.now(),
   referenceLastModifiedDate: referenceLastModifiedDate || formatLocalTodayYmd(),
   exportedAt: new Date().toISOString(),
   masterItems: masterItems || [],
   inventoryItems: inventoryItems || [],
   dateLedgerRecords: dateLedgerRecords || [],
+  logisticsInfoRecords: logisticsInfoRecords || [],
   centerItemRemarks: centerItemRemarks || {},
   productRemarks: productRemarks || {},
   centerActualBoxOverrides: centerActualBoxOverrides || {},
@@ -1282,7 +1307,7 @@
  if (cloneVerModal) cloneVerModal.style.display = 'none';
  const clonePopup = clone.querySelector('#floatingHoverPopup');
  if (clonePopup) clonePopup.style.display = 'none';
- ['#centerSummaryTable tbody', '#productDetailTable tbody', '#tabDateSummaryTable tbody', '#masterTable tbody'].forEach(sel => {
+ ['#centerSummaryTable tbody', '#productDetailTable tbody', '#tabDateSummaryTable tbody', '#masterTable tbody', '#logisticsInfoTable tbody'].forEach(sel => {
   const tb = clone.querySelector(sel);
   if (tb) tb.innerHTML = '';
  });
@@ -1292,7 +1317,7 @@
  const a = document.createElement('a');
  const refDay = referenceLastModifiedDate || formatLocalTodayYmd();
  a.href = url;
- a.download = `잘넷_쿠팡납품변환기_v5.8.1_이어하기_${refDay}.html`;
+ a.download = `잘넷_쿠팡납품변환기_v5.9_이어하기_${refDay}.html`;
  document.body.appendChild(a);
  a.click();
  document.body.removeChild(a);
@@ -1314,7 +1339,7 @@
  showToast(`💾 통합 백업 완료 (품목 ${masterItems.length}종 · 실적 ${dateLedgerRecords.length}일)`);
  }
  function applyRestoredState(parsed, sourceLabel) {
- if (!parsed || (!Array.isArray(parsed.masterItems) && !Array.isArray(parsed.dateLedgerRecords) && !Array.isArray(parsed.inventoryItems))) {
+ if (!parsed || (!Array.isArray(parsed.masterItems) && !Array.isArray(parsed.dateLedgerRecords) && !Array.isArray(parsed.inventoryItems) && !Array.isArray(parsed.logisticsInfoRecords))) {
   showToast('⚠️ 복원할 수 있는 유효한 데이터가 없습니다.');
   return false;
  }
@@ -1329,6 +1354,10 @@
  if (Array.isArray(parsed.dateLedgerRecords)) {
   dateLedgerRecords = parsed.dateLedgerRecords.map(normalizeDateRecord);
   saveDateLedger();
+ }
+ if (Array.isArray(parsed.logisticsInfoRecords)) {
+  logisticsInfoRecords = parsed.logisticsInfoRecords.map(normalizeLogisticsInfoRecord).filter(x => x["점포"]);
+  saveLogisticsInfoRecords();
  }
  if (parsed.referenceLastModifiedDate) {
   referenceLastModifiedDate = String(parsed.referenceLastModifiedDate).trim();
@@ -1389,6 +1418,7 @@
  renderInventoryDatalist();
  renderMasterTable();
  renderAllDateTables();
+ renderLogisticsInfoTable();
  if (sourceLabel) {
   showToast(`✅ ${sourceLabel} 복원 완료! (품목 ${masterItems.length}종 · 재고 ${inventoryItems.length}종 · 실적 ${dateLedgerRecords.length}일)`);
  }
@@ -1412,7 +1442,7 @@
   } else {
    parsed = JSON.parse(rawText);
   }
-   if (!parsed || (!Array.isArray(parsed.masterItems) && !Array.isArray(parsed.inventoryItems) && !Array.isArray(parsed.dateLedgerRecords))) {
+   if (!parsed || (!Array.isArray(parsed.masterItems) && !Array.isArray(parsed.inventoryItems) && !Array.isArray(parsed.dateLedgerRecords) && !Array.isArray(parsed.logisticsInfoRecords))) {
     showToast('⚠️ 복원 파일에 인식 가능한 마스터·재고·실적 데이터가 없습니다.');
     e.target.value = '';
     return;
@@ -1420,8 +1450,9 @@
    const masterCount = Array.isArray(parsed.masterItems) ? parsed.masterItems.length : 0;
    const inventoryCount = Array.isArray(parsed.inventoryItems) ? parsed.inventoryItems.length : 0;
    const ledgerCount = Array.isArray(parsed.dateLedgerRecords) ? parsed.dateLedgerRecords.length : 0;
+   const logisticsCount = Array.isArray(parsed.logisticsInfoRecords) ? parsed.logisticsInfoRecords.length : 0;
    const sessionCount = parsed.currentSession && Array.isArray(parsed.currentSession.uploadedListRows) ? parsed.currentSession.uploadedListRows.length : 0;
-   const preview = `파일: ${file.name}\n복원 예정: 상품 ${masterCount}종 · 재고 ${inventoryCount}종 · 실적 ${ledgerCount}일 · 작업 행 ${sessionCount}개\n\n파일에 포함된 상품·재고·실적 데이터는 현재 값을 덮어씁니다. 발주 이력은 기존 데이터와 병합됩니다. 진행할까요?`;
+   const preview = `파일: ${file.name}\n복원 예정: 상품 ${masterCount}종 · 재고 ${inventoryCount}종 · 실적 ${ledgerCount}일 · 물류정보 ${logisticsCount}곳 · 작업 행 ${sessionCount}개\n\n파일에 포함된 상품·재고·실적 데이터는 현재 값을 덮어씁니다. 발주 이력은 기존 데이터와 병합됩니다. 진행할까요?`;
    showConfirmModal('백업 복원 미리보기', preview, () => applyRestoredState(parsed, '백업 파일'));
   } catch (err) {
   showToast('⚠️ 백업/HTML 파일을 읽는 중 오류가 발생했습니다.');
@@ -1444,6 +1475,7 @@
   if (parsed && (
    (Array.isArray(parsed.masterItems) && parsed.masterItems.length > 0) ||
    (Array.isArray(parsed.dateLedgerRecords) && parsed.dateLedgerRecords.length > 0) ||
+   (Array.isArray(parsed.logisticsInfoRecords) && parsed.logisticsInfoRecords.length > 0) ||
    (parsed.currentSession && Array.isArray(parsed.currentSession.uploadedListRows) && parsed.currentSession.uploadedListRows.length > 0)
   )) {
    embeddedState = parsed;
@@ -1455,6 +1487,8 @@
  const localUpdatedTs = Number(safeGetStorage('jalnet_coupang_last_updated_ts') || 0);
  const savedMasterStr = safeGetStorage('jalnet_coupang_master_v3');
  const savedDatesStr = safeGetStorage('jalnet_coupang_date_records_v1');
+ const savedLogisticsStr = safeGetStorage('jalnet_coupang_logistics_info_v1');
+ if (savedLogisticsStr) { try { const data = JSON.parse(savedLogisticsStr); logisticsInfoRecords = Array.isArray(data) ? data.map(normalizeLogisticsInfoRecord).filter(x => x['점포']) : []; } catch (e) { logisticsInfoRecords = []; } }
  if (!safeGetStorage('jalnet_coupang_builtin_inv_cleared_v51')) {
   safeSetStorage('jalnet_coupang_inventory_v1', '[]');
   safeSetStorage('jalnet_coupang_builtin_inv_cleared_v51', '1');
@@ -1500,7 +1534,7 @@
  } else {
   inventoryItems = [];
  }
- let hasLocalData = false;
+ let hasLocalData = logisticsInfoRecords.length > 0;
  if (savedMasterStr) {
   try {
   const arr = JSON.parse(savedMasterStr);
@@ -1573,18 +1607,71 @@
  const el = document.getElementById('masterCountBadge');
  if (el) el.textContent = masterItems.length;
  }
- function switchTab(tabId, btnEl) {
+ 
+const LOGISTICS_INFO_FIELDS = ['점포','점포명(고객명)','전화번호1','전화번호2','우편번호','주소','E-mail','비고'];
+function normalizeLogisticsInfoRecord(raw) {
+ const source = raw && typeof raw === 'object' ? raw : {};
+ const out = {}; LOGISTICS_INFO_FIELDS.forEach(k => out[k] = String(source[k] == null ? '' : source[k]).trim()); return out;
+}
+function normalizeLogisticsStoreKey(v) { return String(v || '').normalize('NFKC').trim().replace(/\s+/g, '').toUpperCase(); }
+function findLogisticsInfoByCenter(n) { const k = normalizeLogisticsStoreKey(n); return logisticsInfoRecords.find(x => normalizeLogisticsStoreKey(x['점포']) === k) || null; }
+function updateLogisticsInfoCountBadge() { const el=document.getElementById('logisticsInfoCountBadge'); if(el) el.textContent=logisticsInfoRecords.length; }
+function saveLogisticsInfoRecords() { logisticsInfoRecords=logisticsInfoRecords.map(normalizeLogisticsInfoRecord).filter(x=>x['점포']); safeSetStorage('jalnet_coupang_logistics_info_v1',JSON.stringify(logisticsInfoRecords)); markLocalStateUpdated(); updateLogisticsInfoCountBadge(); }
+function renderLogisticsInfoTable() {
+ const tb=document.getElementById('logisticsInfoTableBody'); if(!tb)return; updateLogisticsInfoCountBadge();
+ if(!logisticsInfoRecords.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:#64748b;padding:24px">등록된 물류정보가 없습니다. 위에서 직접 추가하거나 엑셀로 업로드하세요.</td></tr>';return;}
+ tb.innerHTML=logisticsInfoRecords.map((r,i)=>'<tr>'+LOGISTICS_INFO_FIELDS.slice(0,7).map(f=>'<td><input data-logistics-index="'+i+'" data-logistics-field="'+f+'" value="'+escapeHtml(r[f])+'" aria-label="'+f+'"></td>').join('')+'<td></td><td><input data-logistics-index="'+i+'" data-logistics-field="비고" value="'+escapeHtml(r['비고'])+'" aria-label="비고"></td><td><button class="btn-danger" onclick="deleteLogisticsInfoRecord('+i+')">삭제</button></td></tr>').join('');
+}
+function handleLogisticsInfoTableChange(e) {
+ const el=e.target.closest('input[data-logistics-index]'); if(!el)return; const i=Number(el.dataset.logisticsIndex),f=el.dataset.logisticsField,v=el.value.trim();
+ if(!Number.isInteger(i)||!logisticsInfoRecords[i]||!LOGISTICS_INFO_FIELDS.includes(f))return;
+ if(f==='점포'&&(!v||logisticsInfoRecords.some((x,j)=>j!==i&&normalizeLogisticsStoreKey(x['점포'])===normalizeLogisticsStoreKey(v)))){showToast('⚠️ 점포 값이 비어 있거나 중복됩니다.');renderLogisticsInfoTable();return;}
+ logisticsInfoRecords[i][f]=v;saveLogisticsInfoRecords();
+}
+function addLogisticsInfoRecord() {
+ const ids=['logisticsNewStore','logisticsNewCustomer','logisticsNewPhone1','logisticsNewPhone2','logisticsNewPostalCode','logisticsNewAddress','logisticsNewEmail','logisticsNewNote'],v=ids.map(id=>document.getElementById(id).value.trim());
+ if(!v[0]){showToast('⚠️ 점포를 입력해 주세요.');return;}
+ if(logisticsInfoRecords.some(x=>normalizeLogisticsStoreKey(x['점포'])===normalizeLogisticsStoreKey(v[0]))){showToast('⚠️ 같은 점포가 이미 등록되어 있습니다.');return;}
+ const row={};LOGISTICS_INFO_FIELDS.forEach((f,i)=>row[f]=v[i]);logisticsInfoRecords.push(row);saveLogisticsInfoRecords();ids.forEach(id=>document.getElementById(id).value='');renderLogisticsInfoTable();showToast('✅ 물류정보를 추가했습니다.');
+}
+function deleteLogisticsInfoRecord(i) { if(!logisticsInfoRecords[i])return;showConfirmModal('물류정보 삭제','['+logisticsInfoRecords[i]['점포']+'] 정보를 삭제하시겠습니까?',()=>{logisticsInfoRecords.splice(i,1);saveLogisticsInfoRecords();renderLogisticsInfoTable();showToast('🗑️ 물류정보를 삭제했습니다.');}); }
+function logisticsHeaderKey(v){return String(v||'').normalize('NFKC').toLowerCase().replace(/[\s_().-]/g,'');}
+function handleLogisticsInfoExcelUpload(e) {
+ const file=e.target.files&&e.target.files[0];if(!file)return;const reader=new FileReader();
+ reader.onerror=()=>{e.target.value='';showToast('⚠️ 엑셀 파일을 읽지 못했습니다.');};
+ reader.onload=ev=>{try{
+  const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];if(!ws)throw Error('sheet');
+  const rows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});if(!rows.length)throw Error('empty');
+  const aliases={'점포':['점포','물류센터','센터'],'점포명(고객명)':['점포명(고객명)','점포명','고객명'],'전화번호1':['전화번호1','전화1','연락처1'],'전화번호2':['전화번호2','전화2','연락처2'],'우편번호':['우편번호','우편'],'주소':['주소','배송주소'],'E-mail':['e-mail','email','이메일'],'비고':['비고','메모','특이사항']};
+  const keys=Object.keys(rows[0]),map={};Object.entries(aliases).forEach(([f,n])=>{const k=keys.find(x=>n.map(logisticsHeaderKey).includes(logisticsHeaderKey(x)));if(k)map[f]=k;});
+  if(!map['점포'])throw Error('header');const next=rows.map(x=>{const o={};LOGISTICS_INFO_FIELDS.forEach(f=>o[f]=map[f]?String(x[map[f]]||'').trim():'');return o;}).filter(x=>x['점포']);
+  if(!next.length)throw Error('rows');const unique=new Map();next.forEach(x=>unique.set(normalizeLogisticsStoreKey(x['점포']),x));const clean=[...unique.values()];e.target.value='';
+  showConfirmModal('물류정보 엑셀 업로드','파일에서 '+clean.length+'개 점포 정보를 확인했습니다. 현재 '+logisticsInfoRecords.length+'개 목록을 전체 교체할까요?',()=>{logisticsInfoRecords=clean;saveLogisticsInfoRecords();renderLogisticsInfoTable();showToast('✅ '+clean.length+'개 점포 정보를 업로드했습니다.');});
+ }catch(err){e.target.value='';showToast('⚠️ 엑셀의 [점포] 열과 자료를 확인해 주세요. 기존 목록은 유지했습니다.');}};
+ reader.readAsArrayBuffer(file);
+}
+function logisticsInfoSheet(headersOnly) {
+ const headers=['점포','점포명(고객명)','전화번호1','전화번호2','우편번호','주소','E-mail',' ','비고'];
+ const rows=headersOnly?[headers]:[headers,...logisticsInfoRecords.map(r=>[r['점포'],r['점포명(고객명)'],r['전화번호1'],r['전화번호2'],r['우편번호'],r['주소'],r['E-mail'],'',r['비고']])];
+ const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:16},{wch:24},{wch:18},{wch:18},{wch:12},{wch:42},{wch:28},{wch:3},{wch:30}];return ws;
+}
+function downloadLogisticsInfoTemplate(){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,logisticsInfoSheet(true),'쿠팡물류정보_양식');XLSX.writeFile(wb,'쿠팡물류정보_업로드양식.xlsx');}
+function exportLogisticsInfoToExcel(){if(!logisticsInfoRecords.length){showToast('⚠️ 다운로드할 물류정보가 없습니다.');return;}const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,logisticsInfoSheet(false),'쿠팡물류정보');XLSX.writeFile(wb,'쿠팡물류정보.xlsx');}
+function getCenterOrderNumbers(stat){const seen=new Set(),out=[];(stat.items||[]).forEach(it=>String(it.poNumber||'').split(/[,/]+/).map(x=>x.trim()).filter(x=>x&&x!=='-').forEach(x=>{if(!seen.has(x)){seen.add(x);out.push(x);}}));return out.join('/');}
+
+function switchTab(tabId, btnEl) {
  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
  const targetEl = document.getElementById(tabId);
  if (targetEl) targetEl.classList.add('active');
  if (btnEl) { btnEl.classList.add('active'); } else {
-  const tabMap = { converterTab: 0, dateSummaryTab: 1, masterTab: 2 };
+  const tabMap = { converterTab: 0, dateSummaryTab: 1, masterTab: 2, logisticsInfoTab: 3 };
   const idx = tabMap[tabId] !== undefined ? tabMap[tabId] : 0;
   const btns = document.querySelectorAll('.tab-btn');
   if (btns[idx]) btns[idx].classList.add('active');
  }
  if (tabId === 'masterTab') { renderMasterTable(); }
+ if (tabId === 'logisticsInfoTab') { renderLogisticsInfoTable(); }
  }
  function registerPopupData(title, tableHtml, meta = null, scope = 'conv') {
  popupSeq++;
@@ -1798,9 +1885,11 @@
   : Math.round(q * splitUnitPrice);
  return { splitUnitPrice, splitSalesVat };
  }
- const CENTER_EXPORT_COLS = [{ wch: 14 }, { wch: 18 }, { wch: 7 }, { wch: 16 }, { wch: 14 }, { wch: 42 }, { wch: 16 }, { wch: 28 }, { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 26 }];
+ const CENTER_EXPORT_COLS = [{ wch: 14 }, { wch: 18 }, { wch: 7 }, { wch: 16 }, { wch: 14 }, { wch: 42 }, { wch: 16 }, { wch: 28 }, { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 26 }, { wch: 14 }, { wch: 24 }, { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 42 }, { wch: 28 }, { wch: 3 }, { wch: 30 }];
  function appendCenterItemsExcelRows(cname, stat, targetRows) {
  const shipInfo = classifyCenterShipping(cname, stat.boxesCeilSum, stat.boxesExactSum, Boolean(stat.hasManualBoxOverride));
+ const logisticsInfo = findLogisticsInfoByCenter(cname) || {};
+ const centerOrderNumbers = getCenterOrderNumbers(stat);
  let rowNo = 1;
  stat.items.forEach(it => {
   const curRemark = getCenterItemRemark(cname, it.name) || it.remark || '';
@@ -1808,14 +1897,15 @@
   const comps = resolveItemComponentsForExcel(it.skuId, it.name);
   const compCount = comps.length;
   comps.forEach((comp, compIdx) => {
-  const validPo = (it.poNumber && it.poNumber !== '-') ? it.poNumber : '-';
+  const validPo = centerOrderNumbers || ((it.poNumber && it.poNumber !== '-') ? it.poNumber : '-');
   const deductQty = calcComponentStockDeductQty(it.qty, comp);
   const { splitUnitPrice, splitSalesVat } = calcSplitComponentPriceAndSales(unitPrice, it.qty, compIdx, compCount);
   targetRows.push({
    '물류센터': cname, '출고구분': shipInfo.type, 'No': rowNo++, '발주번호': validPo,
    'SKU ID': it.skuId || '-', '상품명': compIdx === 0 ? it.name : '', '품목코드': comp.itemCode, '품명': comp.internalName,
    '납품수량(개)': it.qty, '실제 재고차감 수량(개)': deductQty, '납품가(VAT포함)': splitUnitPrice, '매출(VAT포함)': splitSalesVat,
-   '박스입수량(개)': it.boxCap, '출고박스(올림)': it.boxesCeil, '비고(특이건 메모)': curRemark
+   '박스입수량(개)': it.boxCap, '출고박스(올림)': it.boxesCeil, '비고(특이건 메모)': curRemark,
+   '점포': logisticsInfo['점포'] || cname, '점포명(고객명)': logisticsInfo['점포명(고객명)'] || '', '전화번호1': logisticsInfo['전화번호1'] || '', '전화번호2': logisticsInfo['전화번호2'] || '', '우편번호': logisticsInfo['우편번호'] || '', '주소': logisticsInfo['주소'] || '', 'E-mail': logisticsInfo['E-mail'] || '', ' ': '', '비고': logisticsInfo['비고'] || ''
   });
   });
  });
@@ -4825,7 +4915,7 @@
    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
    border
   };
-  for (let c = 0; c < 15; c++) setWorksheetCellStyle(ws, 0, c, header);
+  for (let c = 0; c < 24; c++) setWorksheetCellStyle(ws, 0, c, header);
   if (ws['!rows']) ws['!rows'][0] = { ...(ws['!rows'][0] || {}), hpt: 30 };
   for (let r = 1; r <= rowCount; r++) {
    const fill = r % 2 === 0 ? 'F8FAFC' : 'FFFFFF';
@@ -4835,7 +4925,7 @@
     alignment: { vertical: 'center', wrapText: true },
     border
    };
-   for (let c = 0; c < 15; c++) {
+   for (let c = 0; c < 24; c++) {
     let fmt = null;
     if (c === 2 || (c >= 8 && c <= 9) || (c >= 12 && c <= 13)) fmt = '#,##0';
     if (c === 10 || c === 11) fmt = '#,##0"원"';
