@@ -61,6 +61,9 @@
   #logisticsInfoTable input {width:100%;min-width:100px;padding:6px 7px;border:1px solid #dce1e7;border-radius:5px;font:inherit;}
   #logisticsInfoTable td:nth-child(6) input {min-width:240px;}
   .logistics-help {padding:10px 18px;color:#64748b;font-size:12px;background:#f8fafc;}
+  .logistics-modal-card {background:#fff;border-radius:14px;width:min(1000px,96vw);max-height:90vh;overflow:auto;box-shadow:0 24px 60px rgba(15,23,42,.35);}
+  .logistics-modal-header {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 20px;background:linear-gradient(135deg,#1f4e78,#2b6cb0);color:#fff;}
+  .logistics-modal-header h3 {font-size:16px;margin:0;}
   .nav-tabs {display:flex;gap:6px;margin-bottom:16px;border-bottom:2px solid var(--border);flex-wrap:wrap;}
   .tab-btn {background:#e2e8f0;color:var(--muted);border:none;padding:10px 20px;border-radius:9px 9px 0 0;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s ease;}
   .tab-btn.active {background:var(--primary);color:#fff;}
@@ -284,7 +287,7 @@
         <h1>📦 잘넷 쿠팡 로켓배송 납품자료 자동 변환기</h1>
         <button type="button" class="v5-badge-btn" onclick="openVersionNotesModal()" title="클릭하여 업데이트 내역 확인">
           <span class="v5-badge-dot"></span>
-          <span>V5.8.1</span>
+          <span>V5.9</span>
         </button>
       </div>
       <div class="header-actions">
@@ -594,11 +597,17 @@
     <div id="logisticsInfoTab" class="tab-content">
       <div class="table-card">
         <div class="table-header"><div><b>📍 쿠팡물류정보</b><div style="font-size:12px;color:var(--muted);margin-top:3px;">물류센터별 배송지와 담당자 정보를 관리합니다.</div></div>
-          <div class="btn-group"><button class="btn-outline btn-sm" onclick="downloadLogisticsInfoTemplate()">📄 업로드 양식</button><button class="btn-success btn-sm" onclick="exportLogisticsInfoToExcel()">💾 현재 목록 엑셀</button><button class="btn-primary btn-sm" onclick="document.getElementById('logisticsInfoExcelInput').click()">📥 엑셀 전체 업로드</button><input type="file" id="logisticsInfoExcelInput" accept=".xlsx,.xls,.csv" onchange="handleLogisticsInfoExcelUpload(event)" /></div>
+          <div class="btn-group"><button class="btn-outline btn-sm" onclick="downloadLogisticsInfoTemplate()">📄 업로드 양식</button><button class="btn-primary btn-sm" onclick="openLogisticsInfoModal()">➕ 점포 추가</button><button class="btn-success btn-sm" onclick="exportLogisticsInfoToExcel()">💾 현재 목록 엑셀</button><button class="btn-primary btn-sm" onclick="document.getElementById('logisticsInfoExcelInput').click()">📥 엑셀 전체 업로드</button><input type="file" id="logisticsInfoExcelInput" accept=".xlsx,.xls,.csv" onchange="handleLogisticsInfoExcelUpload(event)" /></div>
         </div><div class="logistics-help">점포 값이 자동 변환기의 물류센터명과 같으면 출고박스 엑셀에 배송 정보가 연결됩니다. 엑셀 업로드는 현재 목록 전체를 교체합니다.</div>
+<div class="logistics-table-wrap"><table id="logisticsInfoTable" onchange="handleLogisticsInfoTableChange(event)"><thead><tr><th>점포</th><th>점포명(고객명)</th><th>전화번호1</th><th>전화번호2</th><th>우편번호</th><th>주소</th><th>E-mail</th><th style="width:28px"></th><th>비고</th><th>관리</th></tr></thead><tbody id="logisticsInfoTableBody"></tbody></table></div>
+      </div>
+      <div class="modal-backdrop" id="logisticsInfoModal" onclick="if(event.target===this) closeLogisticsInfoModal()">
+        <div class="logistics-modal-card" role="dialog" aria-modal="true" aria-labelledby="logisticsModalTitle">
+          <div class="logistics-modal-header"><h3 id="logisticsModalTitle">📍 쿠팡물류정보 점포 추가</h3><button class="popup-close-hint" onclick="closeLogisticsInfoModal()">닫기 ✕</button></div>
         <div class="logistics-form-grid">
-          <div><label>점포 *</label><input id="logisticsNewStore" placeholder="예: 인천36" /></div><div><label>점포명(고객명)</label><input id="logisticsNewCustomer" /></div><div><label>전화번호1</label><input id="logisticsNewPhone1" /></div><div><label>전화번호2</label><input id="logisticsNewPhone2" /></div><div><label>우편번호</label><input id="logisticsNewPostalCode" /></div><div><label>주소</label><input id="logisticsNewAddress" /></div><div><label>E-mail</label><input id="logisticsNewEmail" /></div><div><label>비고</label><input id="logisticsNewNote" /></div><div style="display:flex;align-items:end"><button class="btn-primary btn-sm" onclick="addLogisticsInfoRecord()">➕ 점포 추가</button></div>
-        </div><div class="logistics-table-wrap"><table id="logisticsInfoTable" onchange="handleLogisticsInfoTableChange(event)"><thead><tr><th>점포</th><th>점포명(고객명)</th><th>전화번호1</th><th>전화번호2</th><th>우편번호</th><th>주소</th><th>E-mail</th><th style="width:28px"></th><th>비고</th><th>관리</th></tr></thead><tbody id="logisticsInfoTableBody"></tbody></table></div>
+          <div><label>점포 *</label><input id="logisticsNewStore" placeholder="예: 인천36" /></div><div><label>점포명(고객명)</label><input id="logisticsNewCustomer" /></div><div><label>전화번호1</label><input id="logisticsNewPhone1" /></div><div><label>전화번호2</label><input id="logisticsNewPhone2" /></div><div><label>우편번호</label><input id="logisticsNewPostalCode" /></div><div><label>주소</label><input id="logisticsNewAddress" /></div><div><label>E-mail</label><input id="logisticsNewEmail" /></div><div><label>비고</label><input id="logisticsNewNote" /></div><div style="display:flex;align-items:end"><button class="btn-primary btn-sm" onclick="addLogisticsInfoRecord()">➕ 점포 저장</button></div>
+        </div>
+        </div>
       </div>
     </div>
     <div id="masterTab" class="tab-content">
@@ -1629,11 +1638,13 @@ function handleLogisticsInfoTableChange(e) {
  if(f==='점포'&&(!v||logisticsInfoRecords.some((x,j)=>j!==i&&normalizeLogisticsStoreKey(x['점포'])===normalizeLogisticsStoreKey(v)))){showToast('⚠️ 점포 값이 비어 있거나 중복됩니다.');renderLogisticsInfoTable();return;}
  logisticsInfoRecords[i][f]=v;saveLogisticsInfoRecords();
 }
+function openLogisticsInfoModal() { const m=document.getElementById("logisticsInfoModal"); if(m)m.style.display="flex"; const i=document.getElementById("logisticsNewStore"); if(i)i.focus(); }
+function closeLogisticsInfoModal() { const m=document.getElementById("logisticsInfoModal"); if(m)m.style.display="none"; }
 function addLogisticsInfoRecord() {
  const ids=['logisticsNewStore','logisticsNewCustomer','logisticsNewPhone1','logisticsNewPhone2','logisticsNewPostalCode','logisticsNewAddress','logisticsNewEmail','logisticsNewNote'],v=ids.map(id=>document.getElementById(id).value.trim());
  if(!v[0]){showToast('⚠️ 점포를 입력해 주세요.');return;}
  if(logisticsInfoRecords.some(x=>normalizeLogisticsStoreKey(x['점포'])===normalizeLogisticsStoreKey(v[0]))){showToast('⚠️ 같은 점포가 이미 등록되어 있습니다.');return;}
- const row={};LOGISTICS_INFO_FIELDS.forEach((f,i)=>row[f]=v[i]);logisticsInfoRecords.push(row);saveLogisticsInfoRecords();ids.forEach(id=>document.getElementById(id).value='');renderLogisticsInfoTable();showToast('✅ 물류정보를 추가했습니다.');
+ const row={};LOGISTICS_INFO_FIELDS.forEach((f,i)=>row[f]=v[i]);logisticsInfoRecords.push(row);saveLogisticsInfoRecords();ids.forEach(id=>document.getElementById(id).value='');closeLogisticsInfoModal();renderLogisticsInfoTable();showToast('✅ 물류정보를 추가했습니다.');
 }
 function deleteLogisticsInfoRecord(i) { if(!logisticsInfoRecords[i])return;showConfirmModal('물류정보 삭제','['+logisticsInfoRecords[i]['점포']+'] 정보를 삭제하시겠습니까?',()=>{logisticsInfoRecords.splice(i,1);saveLogisticsInfoRecords();renderLogisticsInfoTable();showToast('🗑️ 물류정보를 삭제했습니다.');}); }
 function logisticsHeaderKey(v){return String(v||'').normalize('NFKC').toLowerCase().replace(/[\s_().-]/g,'');}
