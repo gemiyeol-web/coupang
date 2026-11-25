@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>잘넷 쿠팡 로켓배송 납품자료 자동 변환기 v5.9</title>
+  <title>잘넷 쿠팡 로켓배송 납품자료 자동 변환기 v5.10</title>
   <!-- SheetJS (xlsx-js-style) for Excel processing -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -60,6 +60,9 @@
   #logisticsInfoTable {min-width:1500px;}
   #logisticsInfoTable input {width:100%;min-width:100px;padding:6px 7px;border:1px solid #dce1e7;border-radius:5px;font:inherit;}
   #logisticsInfoTable td:nth-child(6) input {min-width:240px;}
+  .badge-ad-active {display:inline-block;background:#dcfce7;color:#166534;border:1px solid #86efac;padding:3px 8px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap;}
+  .badge-ad-inactive {display:inline-block;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;padding:3px 8px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;}
+  .badge-ad-unknown {display:inline-block;background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;padding:3px 8px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;}
   .logistics-help {padding:10px 18px;color:#64748b;font-size:12px;background:#f8fafc;}
   .logistics-modal-card {background:#fff;border-radius:14px;width:min(1000px,96vw);max-height:90vh;overflow:auto;box-shadow:0 24px 60px rgba(15,23,42,.35);}
   .logistics-modal-header {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 20px;background:linear-gradient(135deg,#1f4e78,#2b6cb0);color:#fff;}
@@ -287,7 +290,7 @@
         <h1>📦 잘넷 쿠팡 로켓배송 납품자료 자동 변환기</h1>
         <button type="button" class="v5-badge-btn" onclick="openVersionNotesModal()" title="클릭하여 업데이트 내역 확인">
           <span class="v5-badge-dot"></span>
-          <span>V5.9</span>
+          <span>V5.10</span>
         </button>
       </div>
       <div class="header-actions">
@@ -616,13 +619,15 @@
           <div>
             <span>🛠️ 쿠팡 납품 리스트 마스터 & 창고 재고 통합 관리 <span class="vat-pill">개당 마진·마진율(VAT별도) · 다중 세트품목(+세트추가) · 출고불가 센터 관리</span></span>
             <div style="font-size:12px; color:var(--muted); margin-top:3px;">
-              💡 상품명 우측 <b>[개당 마진 · 마진율 (VAT별도)]</b>에서 부가세를 제외한 공급가 기준 마진을 즉시 확인할 수 있으며(마우스 오버 시 상세 계산식 표시), <b>[+세트추가]</b> 및 <b>[출고불가 센터]</b> 관리가 가능합니다.
+              💡 상품명 우측 <b>[개당 마진 · 마진율 (VAT별도)]</b>에서 부가세를 제외한 공급가 기준 마진을 즉시 확인할 수 있으며(마우스 오버 시 상세 계산식 표시), <b>[+세트추가]</b> 및 <b>[출고불가 센터]</b> 관리가 가능합니다. <b>[📣 광고 상태 HTML 업로드]</b>에서 두 광고 HTML을 함께 선택하면 상품별 광고 여부도 확인할 수 있습니다.
             </div>
           </div>
           <div class="btn-group">
             <button class="btn-outline btn-sm" onclick="toggleCollapsibleForm('manualMasterFormWrap', this, '➕ 개별 품목 추가', '🔼 품목 추가 닫기')">➕ 개별 품목 추가</button>
             <button class="btn-primary btn-sm" onclick="document.getElementById('fileMasterTabInput').click()">📂 납품품목 엑셀 업로드</button>
             <input type="file" id="fileMasterTabInput" accept=".xlsx,.xls" onchange="handleMasterExcelUpload(event)" />
+            <button class="btn-outline btn-sm" style="color:#7c3aed;border-color:#c4b5fd;" onclick="document.getElementById('adsStatusHtmlInput').click()" title="쿠팡 Ads Center의 광고 중인 상품 HTML과 광고하지 않는 상품 HTML을 함께 선택하세요.">📣 광고 상태 HTML 업로드</button>
+            <input type="file" id="adsStatusHtmlInput" accept=".html,.htm" multiple onchange="handleAdsStatusHtmlUpload(event)" />
             <button class="btn-primary btn-sm" style="background:#0284c7;" onclick="document.getElementById('fileInventoryTabInput').click()" title="창고 재고 엑셀(재고.xlsx)을 업로드하여 SKU ID가 있는 품목의 가용재고를 일괄 갱신하고 자동으로 재고관리 켜짐으로 전환합니다.">🏭 재고 엑셀 업로드 (재고.xlsx)</button>
             <input type="file" id="fileInventoryTabInput" accept=".xlsx,.xls,.csv" onchange="handleInventoryExcelUpload(event)" />
  <button class="btn-purple btn-sm" onclick="deductCurrentOrderFromInventory()" title="현재 자동 변환기에 매핑된 발주 출고수량을 가용재고에서 차감합니다.">📉 이번 발주수량 재고 차감</button>
@@ -759,6 +764,7 @@
                 <th>No.</th>
                 <th>SKU ID</th>
                 <th class="sticky-prod-col">쿠팡 상품명 📌</th>
+                <th>광고 상태</th>
                 <th class="num" title="납품가(VAT포함)를 VAT별도 공급가로 환산(÷1.1)한 뒤 입고가(VAT별도)를 차감한 개당 순마진액 및 마진율입니다.">개당 마진 · 마진율 (VAT별도)</th>
                 <th>바코드 <button type="button" id="btnInlineExpandStockCols" class="btn-col-collapse" style="display:none;" onclick="toggleMasterStockCols()" title="접혀 있는 품목코드·품명·재고환산·현재 가용재고 열을 펼칩니다">▶ 재고열 펼치기</button></th>
                 <th class="col-stock-detail">품목코드 (+세트상품 추가) <button type="button" class="btn-col-collapse" onclick="toggleMasterStockCols()" title="품목코드·품명·재고환산·현재 가용재고 열 접기">◀ 접기</button></th>
@@ -806,10 +812,14 @@
   <div class="modal-backdrop" id="versionNotesModal" onclick="if(event.target===this) closeVersionNotesModal()">
     <div class="version-modal-card">
       <div class="version-modal-header">
-        <h3>✨ 잘넷 쿠팡 납품자료 자동 변환기 V5.9 업데이트 내역</h3>
+        <h3>✨ 잘넷 쿠팡 납품자료 자동 변환기 V5.10 업데이트 내역</h3>
         <button type="button" class="popup-close-hint" style="border:none; color:#fff;" onclick="closeVersionNotesModal()">닫기 ✕</button>
       </div>
       <div class="version-modal-body">
+        <div class="update-note-item purple">
+          <div class="u-title">📣 [V5.10 신규] 광고 상품 상태 동시 업로드</div>
+          <div class="u-desc">쿠팡 Ads Center에서 저장한 [광고 중인 상품]과 [광고하지 않는 상품] HTML을 한 번에 선택하면 상품별 상태를 합쳐 표시합니다.</div>
+        </div>
         <div class="update-note-item green">
           <div class="u-title">📍 [V5.9 신규] 쿠팡물류정보 관리 및 센터 출고 엑셀 연결</div>
           <div class="u-desc">점포별 배송 정보 등록·수정과 엑셀 전체 업로드를 지원합니다. 전체 센터 출고박스 엑셀에는 배송지 정보와 해당 센터의 모든 발주번호가 각 품목 행에 표시됩니다.</div>
@@ -904,11 +914,12 @@
       </div>
     </div>
   </div>
-  <script id="embeddedStateData" type="application/json">{"version":"5.9","savedAt":0,"masterItems":[],"inventoryItems":[],"dateLedgerRecords":[],"logisticsInfoRecords":[],"centerItemRemarks":{},"productRemarks":{},"currentSession":null}</script>
+  <script id="embeddedStateData" type="application/json">{"version":"5.10","savedAt":0,"masterItems":[],"inventoryItems":[],"dateLedgerRecords":[],"logisticsInfoRecords":[],"adStatusByProduct":{"byVendorItemId":{},"byName":{}},"centerItemRemarks":{},"productRemarks":{},"currentSession":null}</script>
   <script>
  let masterItems = [];
  let inventoryItems = [];
  let logisticsInfoRecords = [];
+ let adStatusByProduct = { byVendorItemId: {}, byName: {}, importedAt: null, sourceFiles: [] };
  let currentOrderDeductionByCode = {};
  let highlightedMasterSku = null;
    let lastDeductedSignature = null;
@@ -1271,7 +1282,7 @@
  }
  function buildCurrentStatePayload() {
  return {
-  version: "5.9",
+  version: "5.10",
   savedAt: Date.now(),
   referenceLastModifiedDate: referenceLastModifiedDate || formatLocalTodayYmd(),
   exportedAt: new Date().toISOString(),
@@ -1279,6 +1290,7 @@
   inventoryItems: inventoryItems || [],
   dateLedgerRecords: dateLedgerRecords || [],
   logisticsInfoRecords: logisticsInfoRecords || [],
+  adStatusByProduct: adStatusByProduct || { byVendorItemId: {}, byName: {} },
   centerItemRemarks: centerItemRemarks || {},
   productRemarks: productRemarks || {},
   centerActualBoxOverrides: centerActualBoxOverrides || {},
@@ -1326,7 +1338,7 @@
  const a = document.createElement('a');
  const refDay = referenceLastModifiedDate || formatLocalTodayYmd();
  a.href = url;
- a.download = `잘넷_쿠팡납품변환기_v5.9_이어하기_${refDay}.html`;
+ a.download = `잘넷_쿠팡납품변환기_v5.10_이어하기_${refDay}.html`;
  document.body.appendChild(a);
  a.click();
  document.body.removeChild(a);
@@ -1348,7 +1360,7 @@
  showToast(`💾 통합 백업 완료 (품목 ${masterItems.length}종 · 실적 ${dateLedgerRecords.length}일)`);
  }
  function applyRestoredState(parsed, sourceLabel) {
- if (!parsed || (!Array.isArray(parsed.masterItems) && !Array.isArray(parsed.dateLedgerRecords) && !Array.isArray(parsed.inventoryItems) && !Array.isArray(parsed.logisticsInfoRecords))) {
+ if (!parsed || (!Array.isArray(parsed.masterItems) && !Array.isArray(parsed.dateLedgerRecords) && !Array.isArray(parsed.inventoryItems) && !Array.isArray(parsed.logisticsInfoRecords) && !(parsed.adStatusByProduct && typeof parsed.adStatusByProduct === "object"))) {
   showToast('⚠️ 복원할 수 있는 유효한 데이터가 없습니다.');
   return false;
  }
@@ -1367,6 +1379,10 @@
  if (Array.isArray(parsed.logisticsInfoRecords)) {
   logisticsInfoRecords = parsed.logisticsInfoRecords.map(normalizeLogisticsInfoRecord).filter(x => x["점포"]);
   saveLogisticsInfoRecords();
+ }
+ if (parsed.adStatusByProduct && typeof parsed.adStatusByProduct === "object") {
+  adStatusByProduct = { byVendorItemId: parsed.adStatusByProduct.byVendorItemId || {}, byName: parsed.adStatusByProduct.byName || {}, importedAt: parsed.adStatusByProduct.importedAt || null, sourceFiles: Array.isArray(parsed.adStatusByProduct.sourceFiles) ? parsed.adStatusByProduct.sourceFiles : [] };
+  saveAdStatusByProduct();
  }
  if (parsed.referenceLastModifiedDate) {
   referenceLastModifiedDate = String(parsed.referenceLastModifiedDate).trim();
@@ -1451,7 +1467,7 @@
   } else {
    parsed = JSON.parse(rawText);
   }
-   if (!parsed || (!Array.isArray(parsed.masterItems) && !Array.isArray(parsed.inventoryItems) && !Array.isArray(parsed.dateLedgerRecords) && !Array.isArray(parsed.logisticsInfoRecords))) {
+   if (!parsed || (!Array.isArray(parsed.masterItems) && !Array.isArray(parsed.inventoryItems) && !Array.isArray(parsed.dateLedgerRecords) && !Array.isArray(parsed.logisticsInfoRecords) && !(parsed.adStatusByProduct && typeof parsed.adStatusByProduct === "object"))) {
     showToast('⚠️ 복원 파일에 인식 가능한 마스터·재고·실적 데이터가 없습니다.');
     e.target.value = '';
     return;
@@ -1485,6 +1501,7 @@
    (Array.isArray(parsed.masterItems) && parsed.masterItems.length > 0) ||
    (Array.isArray(parsed.dateLedgerRecords) && parsed.dateLedgerRecords.length > 0) ||
    (Array.isArray(parsed.logisticsInfoRecords) && parsed.logisticsInfoRecords.length > 0) ||
+   (parsed.adStatusByProduct && typeof parsed.adStatusByProduct === "object" && (Object.keys(parsed.adStatusByProduct.byVendorItemId || {}).length > 0 || Object.keys(parsed.adStatusByProduct.byName || {}).length > 0)) ||
    (parsed.currentSession && Array.isArray(parsed.currentSession.uploadedListRows) && parsed.currentSession.uploadedListRows.length > 0)
   )) {
    embeddedState = parsed;
@@ -1498,6 +1515,8 @@
  const savedDatesStr = safeGetStorage('jalnet_coupang_date_records_v1');
  const savedLogisticsStr = safeGetStorage('jalnet_coupang_logistics_info_v1');
  if (savedLogisticsStr) { try { const data = JSON.parse(savedLogisticsStr); logisticsInfoRecords = Array.isArray(data) ? data.map(normalizeLogisticsInfoRecord).filter(x => x['점포']) : []; } catch (e) { logisticsInfoRecords = []; } }
+ const savedAdStatusStr = safeGetStorage('jalnet_coupang_ad_status_v1');
+ if (savedAdStatusStr) { try { const parsedAdStatus = JSON.parse(savedAdStatusStr); if (parsedAdStatus && typeof parsedAdStatus === 'object') adStatusByProduct = { byVendorItemId: parsedAdStatus.byVendorItemId || {}, byName: parsedAdStatus.byName || {}, importedAt: parsedAdStatus.importedAt || null, sourceFiles: Array.isArray(parsedAdStatus.sourceFiles) ? parsedAdStatus.sourceFiles : [] }; } catch (e) { adStatusByProduct = { byVendorItemId: {}, byName: {}, importedAt: null, sourceFiles: [] }; } }
  if (!safeGetStorage('jalnet_coupang_builtin_inv_cleared_v51')) {
   safeSetStorage('jalnet_coupang_inventory_v1', '[]');
   safeSetStorage('jalnet_coupang_builtin_inv_cleared_v51', '1');
@@ -1543,7 +1562,7 @@
  } else {
   inventoryItems = [];
  }
- let hasLocalData = logisticsInfoRecords.length > 0;
+ let hasLocalData = logisticsInfoRecords.length > 0 || Object.keys(adStatusByProduct.byVendorItemId || {}).length > 0 || Object.keys(adStatusByProduct.byName || {}).length > 0;
  if (savedMasterStr) {
   try {
   const arr = JSON.parse(savedMasterStr);
@@ -1638,6 +1657,87 @@ function handleLogisticsInfoTableChange(e) {
  if(f==='점포'&&(!v||logisticsInfoRecords.some((x,j)=>j!==i&&normalizeLogisticsStoreKey(x['점포'])===normalizeLogisticsStoreKey(v)))){showToast('⚠️ 점포 값이 비어 있거나 중복됩니다.');renderLogisticsInfoTable();return;}
  logisticsInfoRecords[i][f]=v;saveLogisticsInfoRecords();
 }
+
+function normalizeAdProductName(value) {
+ return String(value || '').normalize('NFKC').toLocaleLowerCase().replace(/\s+/g, '').replace(/[·,()\-_/]/g, '');
+}
+function getMasterAdStatus(item) {
+ const state = adStatusByProduct || {};
+ const id = String(item && (item.vendorItemId || item.vendorItemID || item.coupangVendorItemId) || '').trim();
+ if (id && state.byVendorItemId && state.byVendorItemId[id]) return state.byVendorItemId[id];
+ const key = normalizeAdProductName(item && item.name);
+ return key && state.byName ? (state.byName[key] || '') : '';
+}
+function getMasterAdStatusHtml(item) {
+ const status = getMasterAdStatus(item);
+ if (status === 'ad') return '<span class="badge-ad-active" title="쿠팡 Ads Center 광고 중인 상품 목록과 일치">광고 중</span>';
+ if (status === 'non_ad') return '<span class="badge-ad-inactive" title="쿠팡 Ads Center 광고하지 않는 상품 목록과 일치">광고 아님</span>';
+ if (status === 'conflict') return '<span class="badge-ad-unknown" title="같은 상품명에 광고 상태가 다르게 등록되어 상품 ID 확인이 필요합니다.">ID 확인 필요</span>';
+ return '<span class="badge-ad-unknown" title="광고 목록과 연결되지 않았습니다. 상품명 또는 상품 ID를 확인하세요.">미확인</span>';
+}
+function countMatchedAdStatusRecords(state) {
+ const byName = state && state.byName || {};
+ return masterItems.filter(item => {
+  const id = String(item && (item.vendorItemId || item.vendorItemID || item.coupangVendorItemId) || '').trim();
+  return (id && state.byVendorItemId && state.byVendorItemId[id]) || byName[normalizeAdProductName(item && item.name)];
+ }).length;
+}
+function parseCoupangAdsSnapshot(html, fileName) {
+ const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+ const selected = doc.querySelector('.tabs-item--selected[data-bigfoot-component]');
+ const key = selected && selected.getAttribute('data-bigfoot-component');
+ if (key !== 'ad' && key !== 'non_ad') throw new Error('광고 중/미광고 탭이 선택된 Ads Center HTML이 아닙니다: ' + fileName);
+ const panel = doc.querySelector('.tabs-children [data-bigfoot-component="' + key + '"]');
+ if (!panel) throw new Error('상품 목록을 찾을 수 없습니다: ' + fileName);
+ const byId = new Map();
+ panel.querySelectorAll('[role="row"][row-index][row-id]').forEach(row => {
+  const vendorItemId = String(row.getAttribute('row-id') || '').trim();
+  const productCell = row.querySelector('[col-id="vendorItem"]');
+  const image = productCell && productCell.querySelector('img[alt]');
+  let name = image ? String(image.getAttribute('alt') || '').trim() : '';
+  if (!name && productCell) {
+   name = String(productCell.textContent || '').replace(/ID:\s*\d+/i, '').replace(/[•·]\s*[\d,]+원/g, '').replace(/재고량:\s*[\d,]+개/g, '').trim();
+  }
+  if (vendorItemId && name && !byId.has(vendorItemId)) byId.set(vendorItemId, { vendorItemId, name, status: key });
+ });
+ if (!byId.size) throw new Error('상품 행이 없거나 읽을 수 없습니다: ' + fileName);
+ return { status: key, records: Array.from(byId.values()), fileName };
+}
+function saveAdStatusByProduct() {
+ safeSetStorage('jalnet_coupang_ad_status_v1', JSON.stringify(adStatusByProduct));
+ markLocalStateUpdated();
+}
+async function handleAdsStatusHtmlUpload(event) {
+ const files = Array.from(event.target.files || []);
+ if (!files.length) return;
+ try {
+  const parsed = await Promise.all(files.map(async file => parseCoupangAdsSnapshot(await file.text(), file.name)));
+  const byVendorItemId = {}, byName = {};
+  parsed.forEach(snapshot => snapshot.records.forEach(record => {
+   byVendorItemId[record.vendorItemId] = record.status;
+   const key = normalizeAdProductName(record.name);
+   if (!key) return;
+   if (byName[key] && byName[key] !== record.status) byName[key] = 'conflict';
+   else byName[key] = record.status;
+  }));
+  const nextState = { byVendorItemId, byName, importedAt: new Date().toISOString(), sourceFiles: parsed.map(x => x.fileName) };
+  const adCount = Object.values(byVendorItemId).filter(x => x === 'ad').length;
+  const nonAdCount = Object.values(byVendorItemId).filter(x => x === 'non_ad').length;
+  const typeWarning = (!adCount || !nonAdCount) ? '\n⚠️ 광고 중인 상품과 광고하지 않는 상품 파일을 모두 선택하면 두 상태가 함께 갱신됩니다.' : '';
+  const preview = '선택한 파일 ' + parsed.length + '개에서 광고 중 ' + adCount + '개, 광고 아님 ' + nonAdCount + '개를 읽었습니다.\n현재 마스터 품목과 이름이 일치하는 수: ' + countMatchedAdStatusRecords(nextState) + '개' + typeWarning + '\n\n이 파일 내용으로 광고 상태를 갱신할까요?';
+  event.target.value = '';
+  showConfirmModal('광고 상태 업데이트', preview, () => {
+   adStatusByProduct = nextState;
+   saveAdStatusByProduct();
+   renderMasterTable();
+   showToast('✅ 광고 상태를 갱신했습니다. 연결되지 않은 품목은 미확인으로 표시됩니다.');
+  });
+ } catch (err) {
+  event.target.value = '';
+  showToast('⚠️ Ads Center HTML을 읽지 못했습니다. 각 파일에서 [광고 중인 상품] 또는 [광고하지 않는 상품] 탭을 선택한 뒤 저장했는지 확인해 주세요.');
+ }
+}
+
 function openLogisticsInfoModal() { const m=document.getElementById("logisticsInfoModal"); if(m)m.style.display="flex"; const i=document.getElementById("logisticsNewStore"); if(i)i.focus(); }
 function closeLogisticsInfoModal() { const m=document.getElementById("logisticsInfoModal"); if(m)m.style.display="none"; }
 function addLogisticsInfoRecord() {
@@ -3286,7 +3386,7 @@ function switchTab(tabId, btnEl) {
  if (validSkuItemCount === 0) {
   tbody.innerHTML = `
   <tr>
-   <td colspan="17" style="text-align:center; padding:36px 20px; color:var(--muted);">
+   <td colspan="18 style="text-align:center; padding:36px 20px; color:var(--muted);">
    <div style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px;">등록된 쿠팡 납품 마스터 품목(SKU ID 보유)이 없습니다.</div>
    <div style="font-size:12.5px; margin-bottom:14px;">상단 <b>[📂 납품품목 엑셀 업로드]</b>로 SKU ID가 포함된 품목 리스트를 등록해 주세요.</div>
    <div style="display:inline-flex; gap:8px; flex-wrap:wrap; justify-content:center;">
@@ -3300,7 +3400,7 @@ function switchTab(tabId, btnEl) {
  if (rowsToRender.length === 0) {
   tbody.innerHTML = `
   <tr>
-   <td colspan="17" style="text-align:center; padding:28px; color:var(--muted);">
+   <td colspan="18 style="text-align:center; padding:28px; color:var(--muted);">
    선택한 검색어 또는 필터 조건에 해당하는 품목이 없습니다.
    <div style="margin-top:8px;">
     <button type="button" class="btn-outline btn-sm" onclick="clearMasterSearchFilter()">🧹 검색어·필터 초기화</button>
@@ -3502,6 +3602,7 @@ function switchTab(tabId, btnEl) {
    <input type="text" class="inline-input-text" value="${escapeHtml(item.name)}"
    onchange="updateMasterField(${idx}, 'name', this.value)" />
   </td>
+  <td>${getMasterAdStatusHtml(item)}</td>
   <td class="num">${marginCellHtml}</td>
   <td style="font-size:12px; color:var(--muted);">${escapeHtml(item.barcode || '-')}</td>
   <td class="col-stock-detail">${codeCellHtml}</td>
@@ -4001,6 +4102,7 @@ function switchTab(tabId, btnEl) {
   exportRows.push({
    'SKU ID': item.skuId,
    '상품명': item.name,
+   '광고 상태': getMasterAdStatus(item) === 'ad' ? '광고 중' : (getMasterAdStatus(item) === 'non_ad' ? '광고 아님' : (getMasterAdStatus(item) === 'conflict' ? 'ID 확인 필요' : '미확인')),
    '개당 마진액(VAT별도)': compMargin.marginSupply,
    '마진율(%)': compMargin.marginRateNum,
    '바코드': item.barcode,
