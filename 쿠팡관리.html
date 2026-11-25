@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>잘넷 쿠팡 로켓배송 납품자료 자동 변환기 v5.10</title>
+  <title>잘넷 쿠팡 로켓배송 납품자료 자동 변환기 v6.0</title>
   <!-- SheetJS (xlsx-js-style) for Excel processing -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -290,7 +290,7 @@
         <h1>📦 잘넷 쿠팡 로켓배송 납품자료 자동 변환기</h1>
         <button type="button" class="v5-badge-btn" onclick="openVersionNotesModal()" title="클릭하여 업데이트 내역 확인">
           <span class="v5-badge-dot"></span>
-          <span>V5.10</span>
+          <span>V6.0</span>
         </button>
       </div>
       <div class="header-actions">
@@ -812,12 +812,12 @@
   <div class="modal-backdrop" id="versionNotesModal" onclick="if(event.target===this) closeVersionNotesModal()">
     <div class="version-modal-card">
       <div class="version-modal-header">
-        <h3>✨ 잘넷 쿠팡 납품자료 자동 변환기 V5.10 업데이트 내역</h3>
+        <h3>✨ 잘넷 쿠팡 납품자료 자동 변환기 V6.0 업데이트 내역</h3>
         <button type="button" class="popup-close-hint" style="border:none; color:#fff;" onclick="closeVersionNotesModal()">닫기 ✕</button>
       </div>
       <div class="version-modal-body">
         <div class="update-note-item purple">
-          <div class="u-title">📣 [V5.10 신규] 광고 상품 상태 동시 업로드</div>
+          <div class="u-title">📣 [V6.0 신규] 광고 상품 상태 동시 업로드</div>
           <div class="u-desc">쿠팡 Ads Center에서 저장한 [광고 중인 상품]과 [광고하지 않는 상품] HTML을 한 번에 선택하면 상품별 상태를 합쳐 표시합니다.</div>
         </div>
         <div class="update-note-item green">
@@ -914,7 +914,7 @@
       </div>
     </div>
   </div>
-  <script id="embeddedStateData" type="application/json">{"version":"5.10","savedAt":0,"masterItems":[],"inventoryItems":[],"dateLedgerRecords":[],"logisticsInfoRecords":[],"adStatusByProduct":{"byVendorItemId":{},"byName":{}},"centerItemRemarks":{},"productRemarks":{},"currentSession":null}</script>
+  <script id="embeddedStateData" type="application/json">{"version":"6.0","savedAt":0,"masterItems":[],"inventoryItems":[],"dateLedgerRecords":[],"logisticsInfoRecords":[],"adStatusByProduct":{"byVendorItemId":{},"byName":{}},"centerItemRemarks":{},"productRemarks":{},"currentSession":null}</script>
   <script>
  let masterItems = [];
  let inventoryItems = [];
@@ -1282,7 +1282,7 @@
  }
  function buildCurrentStatePayload() {
  return {
-  version: "5.10",
+  version: "6.0",
   savedAt: Date.now(),
   referenceLastModifiedDate: referenceLastModifiedDate || formatLocalTodayYmd(),
   exportedAt: new Date().toISOString(),
@@ -1338,7 +1338,7 @@
  const a = document.createElement('a');
  const refDay = referenceLastModifiedDate || formatLocalTodayYmd();
  a.href = url;
- a.download = `잘넷_쿠팡납품변환기_v5.10_이어하기_${refDay}.html`;
+ a.download = `잘넷_쿠팡납품변환기_v6.0_이어하기_${refDay}.html`;
  document.body.appendChild(a);
  a.click();
  document.body.removeChild(a);
@@ -7198,17 +7198,3 @@ function switchTab(tabId, btnEl) {
  ws['!cols'] = [
   { wch: 14 }, { wch: 10 }, { wch: 8 }, { wch: 26 },
   { wch: 10 }, { wch: 14 }, { wch: 20 }, { wch: 18 }, { wch: 16 }, { wch: 18 }, { wch: 12 },
-  { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 14 }
- ];
- const wb = XLSX.utils.book_new();
- XLSX.utils.book_append_sheet(wb, ws, '연월일별_실적소계');
- XLSX.writeFile(wb, '쿠팡_연월일별_납품실적_및_소계.xlsx');
- }
- function downloadResult() {
- if (!outputWb) return;
- XLSX.writeFile(outputWb, outputFilename);
- }
- window.addEventListener('DOMContentLoaded', initMasterItems);
- </script>
-</body>
-</html>
